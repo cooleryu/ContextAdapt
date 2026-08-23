@@ -49,6 +49,8 @@
     "prepare": "npm run build",
     "contextadapt": "node dist/packages/cli/src/bin.js",
     "demo": "npm run contextadapt -- demo",
+    "experiment:long-context": "node --import tsx experiments/long-context/src/run.ts",
+    "experiment:long-context:dry": "node --import tsx experiments/long-context/src/run.ts --dry-run",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc -p tsconfig.json --noEmit",

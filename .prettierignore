@@ -3,5 +3,7 @@ node_modules/
 .npm-cache/
 research/python/
 artifacts/
+experiments/long-context/RESULTS.md
+experiments/long-context/results/
 *.tgz
 package-lock.json

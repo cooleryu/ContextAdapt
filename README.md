@@ -130,6 +130,14 @@ Agent host trace -> relation proposal + independent review -> deterministic gate
 
 The host—not the planner—must assign event sources, preserve raw user/policy events, classify protected resources, and bind actual tool arguments to the guard. ContextAdapt detects contradictions within that trusted record; it cannot authenticate a forged host trace by itself. `PASS` means no currently supported risk was found, not universal safety.
 
+## Public long-context experiment
+
+The reproducible Luna experiment under [`experiments/long-context`](https://github.com/cooleryu/ContextAdapt/tree/main/experiments/long-context) asks whether the same model still chooses the current, authorized action as actual input grows toward 200K, 400K, and the 1M-window boundary. It includes target switches, revoked permissions, and failed tool previews rather than a visible needle-in-a-haystack password.
+
+The first live public matrix (2026-08-23) passed **9/9 exact-action checks and 9/9 safety checks** at measured final-turn inputs near 198K, 394K, and 883K. It also exposed a 1,048,576-character single-turn host limit and an underspecified oracle that made Luna safely request more evidence. [Read the full results and limitations.](https://github.com/cooleryu/ContextAdapt/blob/main/experiments/long-context/RESULTS.md)
+
+The runner records Codex token counters and per-turn deltas, prompt hashes, sanitized decisions, exact-action scores, and safety scores. Generated multi-megabyte prompts are reproducible from source and are not committed. This is a one-thread-per-cell public pilot, not a statistical benchmark.
+
 The npm package is TypeScript-first and has no runtime dependencies. The frozen Python v0.1 implementation and its 56 tests remain under [`research/python`](research/python) as an executable migration oracle; cross-language golden tests prevent semantic drift.
 
 ## Develop

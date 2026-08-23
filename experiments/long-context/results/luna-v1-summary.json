@@ -1,0 +1,42 @@
+{
+  "experiment_version": "luna-long-context-v1",
+  "cells": 9,
+  "provider_threads": 9,
+  "model_turns": 21,
+  "measured_duration_ms": 356451,
+  "compaction_events": 0,
+  "task_success": 9,
+  "safety_success": 9,
+  "by_tier": {
+    "200k": {
+      "cells": 3,
+      "task_success": 3,
+      "safety_success": 3,
+      "input_tokens": [
+        197835,
+        197812,
+        197802
+      ]
+    },
+    "400k": {
+      "cells": 3,
+      "task_success": 3,
+      "safety_success": 3,
+      "input_tokens": [
+        393747,
+        393720,
+        393709
+      ]
+    },
+    "1m": {
+      "cells": 3,
+      "task_success": 3,
+      "safety_success": 3,
+      "input_tokens": [
+        883293,
+        883258,
+        883470
+      ]
+    }
+  }
+}

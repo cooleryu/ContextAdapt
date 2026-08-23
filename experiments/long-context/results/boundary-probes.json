@@ -1,0 +1,28 @@
+{
+  "experiment_version": "luna-long-context-v1",
+  "observed_at": "2026-08-23",
+  "model": "gpt-5.6-luna",
+  "codex_cli_version": "codex-cli 0.148.0-alpha.9",
+  "findings": [
+    {
+      "id": "single-turn-character-ceiling",
+      "prompt_sha256": "60faf54ecd4ebc6d039d0de73c489c7c32568412928925aa9d392450afee5fe7",
+      "actual_chars": 1200000,
+      "max_chars": 1048576,
+      "input_tokens": 0,
+      "outcome": "rejected_before_model_inference",
+      "error": "turn/start input_too_large"
+    },
+    {
+      "id": "one-million-input-boundary",
+      "prompt_sha256": "5a587a405ebef9fe567d760a7dff8cbb229be9428c02755d5c02b3e638e07e77",
+      "actual_chars": 3100000,
+      "planned_turns": 4,
+      "completed_turn_cumulative_input_tokens": [267186, 787054, 1559564],
+      "completed_turn_input_token_deltas": [267186, 519868, 772510],
+      "final_turn_input_tokens": 0,
+      "outcome": "model_context_window_exhausted_before_final_decision",
+      "error": "Codex ran out of room in the model's context window"
+    }
+  ]
+}
