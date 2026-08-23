@@ -9,7 +9,7 @@
       `SECURITY.md`.
 - [x] Create a clean Git repository and verify that no secrets or private
       artifacts exist in its history.
-- [ ] Run CI on Python 3.9–3.12.
+- [x] Run CI on Python 3.9–3.12.
 - [x] Confirm a fresh-machine wheel install and the public seven-event example.
 
 ## P0: useful product, not only a research demo
