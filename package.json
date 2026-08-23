@@ -1,0 +1,63 @@
+{
+  "name": "contextadapt",
+  "version": "0.2.0",
+  "description": "Stop AI agents from executing valid-looking plans built from stale context.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cooleryu/ContextAdapt.git"
+  },
+  "homepage": "https://github.com/cooleryu/ContextAdapt#readme",
+  "bugs": "https://github.com/cooleryu/ContextAdapt/issues",
+  "keywords": [
+    "ai-agents",
+    "agent-safety",
+    "context-management",
+    "codex",
+    "oh-my-pi"
+  ],
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "bin": {
+    "contextadapt": "dist/packages/cli/src/bin.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/packages/core/src/index.d.ts",
+      "import": "./dist/packages/core/src/index.js"
+    },
+    "./codex": {
+      "types": "./dist/packages/codex/src/index.d.ts",
+      "import": "./dist/packages/codex/src/index.js"
+    },
+    "./omp": {
+      "types": "./dist/packages/omp/src/index.d.ts",
+      "import": "./dist/packages/omp/src/index.js"
+    }
+  },
+  "files": [
+    "dist/",
+    "schema/",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test tests/**/*.test.ts",
+    "test:python-oracle": "cd research/python && python3 -m unittest discover -s tests",
+    "check": "npm run format:check && npm run typecheck && npm test && npm run test:python-oracle && npm run build && npm pack --dry-run --cache .npm-cache"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "prettier": "^3.6.2",
+    "prettier": "^3.9.6",
+    "tsx": "^4.22.0",
+    "typescript": "^6.0.0"
+  }
+}

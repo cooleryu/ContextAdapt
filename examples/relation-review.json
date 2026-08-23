@@ -6,7 +6,12 @@
   "proposal_sha256": "cb76345a3474294f685a32b8c6da86730c313d6fdeb479f5761b0a052c72321b",
   "verdict": "approve",
   "confidence": 0.96,
-  "accepted_fields": ["environment", "timeout", "edit_protected", "target_file"],
+  "accepted_fields": [
+    "environment",
+    "timeout",
+    "edit_protected",
+    "target_file"
+  ],
   "accepted_entity": "ticket:deploy",
   "accepted_relation": "partial_supersession",
   "field_reviews": [
@@ -15,32 +20,44 @@
       "operation": "replace",
       "old_value": "staging",
       "new_value": "production",
-      "old_evidence": {"event_id": "ticket-old", "quote": "staging"},
-      "new_evidence": {"event_id": "ticket-current", "quote": "production"}
+      "old_evidence": { "event_id": "ticket-old", "quote": "staging" },
+      "new_evidence": { "event_id": "ticket-current", "quote": "production" }
     },
     {
       "field": "timeout",
       "operation": "replace",
       "old_value": 30,
       "new_value": 60,
-      "old_evidence": {"event_id": "ticket-old", "quote": "timeout 30"},
-      "new_evidence": {"event_id": "ticket-current", "quote": "timeout 60"}
+      "old_evidence": { "event_id": "ticket-old", "quote": "timeout 30" },
+      "new_evidence": { "event_id": "ticket-current", "quote": "timeout 60" }
     },
     {
       "field": "edit_protected",
       "operation": "deny",
       "old_value": true,
       "new_value": false,
-      "old_evidence": {"event_id": "ticket-old", "quote": "protected edits are allowed"},
-      "new_evidence": {"event_id": "ticket-current", "quote": "protected edits are forbidden"}
+      "old_evidence": {
+        "event_id": "ticket-old",
+        "quote": "protected edits are allowed"
+      },
+      "new_evidence": {
+        "event_id": "ticket-current",
+        "quote": "protected edits are forbidden"
+      }
     },
     {
       "field": "target_file",
       "operation": "replace",
       "old_value": "staging/config.json",
       "new_value": "production/config.json",
-      "old_evidence": {"event_id": "ticket-old", "quote": "staging/config.json"},
-      "new_evidence": {"event_id": "ticket-current", "quote": "production/config.json"}
+      "old_evidence": {
+        "event_id": "ticket-old",
+        "quote": "staging/config.json"
+      },
+      "new_evidence": {
+        "event_id": "ticket-current",
+        "quote": "production/config.json"
+      }
     }
   ],
   "issues": []

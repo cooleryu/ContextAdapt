@@ -40,6 +40,6 @@ remove unrelated content before submitting the private report.
   the same sensitivity as the source repository.
 - A ContextAdapt hook supplements the Agent sandbox and operating-system access
   controls; it does not replace them. Unsupported or opaque tool paths must be
-  disabled, separately guarded, or treated as outside the v0.1 guarantee.
+  disabled, separately guarded, or treated as outside the v0.2 guarantee.
 - Risk output is diagnostic evidence, not an authorization decision. Protected
   actions should also be guarded by the host Agent environment.

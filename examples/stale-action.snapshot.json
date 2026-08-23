@@ -134,9 +134,7 @@
         "edit_protected": true,
         "target_file": "staging/config.json",
         "authority": "user",
-        "protected_scope": [
-          "staging/config.json"
-        ]
+        "protected_scope": ["staging/config.json"]
       },
       "links": {},
       "text": "Deploy staging/config.json in staging with timeout 30; protected edits are allowed for staging/config.json."

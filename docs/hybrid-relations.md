@@ -73,7 +73,7 @@ Provider identity is evidence of separate runs, not proof of independent
 internal reasoning. ContextAdapt now ships deterministic pre-tool bindings for
 the supported Codex `apply_patch`/mutating `Bash` and OMP
 `write`/`edit`/mutating `bash` paths. Other hosted or specialized tools remain
-outside that v0.1 boundary. The host must also preserve trustworthy
+outside that v0.2 boundary. The host must also preserve trustworthy
 `user`/`policy` source provenance; ContextAdapt does not authenticate a forged
 input trace.
 

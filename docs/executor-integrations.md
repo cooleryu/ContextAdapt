@@ -20,7 +20,7 @@ First create or obtain an accepted proposal/review bundle. The bundled fixture
 is useful for seeing the integration shape:
 
 ```bash
-python3 -m contextadapt compile-guard \
+npx contextadapt compile-guard \
   examples/stale-action.jsonl \
   examples/relation-proposal.json \
   examples/relation-review.json \
@@ -61,17 +61,16 @@ OMP 17.x exposes a native `tool_call` extension event before tool execution.
 Run OMP with the included extension and point it at the guard:
 
 ```bash
-CONTEXTADAPT_BIN=/absolute/path/to/ContextAdapt/scripts/contextadapt-hook \
 CONTEXTADAPT_GUARD=/absolute/path/to/repo/.contextadapt/executor-guard.json \
-omp --extension /absolute/path/to/ContextAdapt/integrations/omp/contextadapt-guard.ts
+omp --extension /absolute/path/to/ContextAdapt/dist/packages/omp/src/index.js
 ```
 
-The extension covers OMP `write`, `edit`, and relevant `bash` calls. Because
+The extension runs the TypeScript guard in process and covers OMP `write`, `edit`, and relevant `bash` calls. Because
 the separate `python` and `notebook` tools can mutate files without exposing a
-stable target contract, v0.1 blocks them while a guard is active. The extension
-also fails closed if the guard process cannot start or returns invalid JSON.
+stable target contract, v0.2 blocks them while a guard is active. The extension
+also fails closed if the policy is missing or invalid.
 
-## What v0.1 checks
+## What v0.2 checks
 
 For the supported tool paths, the guard can:
 
@@ -99,7 +98,6 @@ test isolates executor behavior and needs no model endpoint:
 OMP_RUNTIME_DIR=/path/to/omp/runtime \
 CONTEXTADAPT_LAB_DIR=/tmp/contextadapt-omp-lab \
 CONTEXTADAPT_GUARD=/tmp/contextadapt-omp-lab/executor-guard.json \
-CONTEXTADAPT_BIN=$PWD/scripts/contextadapt-hook \
 bun run scripts/omp_executor_lab.ts
 ```
 
@@ -107,7 +105,7 @@ The Codex lab uses two real `gpt-5.6-luna` runs in isolated temporary Git
 repositories. It requires an existing Codex login:
 
 ```bash
-python3 scripts/codex_executor_lab.py \
+python3 research/python/scripts/codex_executor_lab.py \
   --lab-dir /tmp/contextadapt-codex-lab \
   --guard /tmp/contextadapt-codex-lab/executor-guard.json \
   --codex-bin /path/to/codex \

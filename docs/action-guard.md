@@ -17,7 +17,7 @@ Agent plans action
 Agent records based_on_event + permission_event
         |
         v
-python3 -m contextadapt check trace.jsonl
+npx contextadapt check trace.jsonl
         |
         +-- PASS (exit 0)  --> host may continue with its own safety checks
         |
@@ -58,33 +58,31 @@ JSONL verifier can recover that lost trust boundary.
 Export the complete built-in example for inspection:
 
 ```bash
-python3 -m contextadapt demo --trace-out demo.jsonl
-python3 -m contextadapt check demo.jsonl
+npx contextadapt demo --trace-out demo.jsonl
+npx contextadapt check demo.jsonl
 ```
 
 ## Exit contract
 
-| Exit | Meaning |
-|---:|---|
-| `0` | The trace was valid and no supported action risk was found |
-| `1` | The trace could not be read or validated |
-| `2` | A supported risk or insufficient evidence was found; block execution |
+| Exit | Meaning                                                              |
+| ---: | -------------------------------------------------------------------- |
+|  `0` | The trace was valid and no supported action risk was found           |
+|  `1` | The trace could not be read or validated                             |
+|  `2` | A supported risk or insufficient evidence was found; block execution |
 
 `PASS` is deliberately limited. It does not prove that a command is correct,
 secure, reversible, or authorized by the operating system. The host must keep
 its normal sandbox, approval, verifier, and access-control checks.
 
-## Python integration
+## TypeScript integration
 
-```python
-from pathlib import Path
+```ts
+import { buildSnapshot, gateStatus, loadJsonl } from "contextadapt";
 
-from contextadapt import diagnose_trace, load_jsonl
-
-snapshot = diagnose_trace(load_jsonl(Path("agent-trace.jsonl")), "run-123")
-gate = snapshot["gate_evidence"]
-if snapshot["risk_summary"]["total"] or gate["assessable_action_count"] < gate["candidate_action_count"]:
-    raise RuntimeError("Discard candidate action and rebuild from current state")
+const snapshot = buildSnapshot(await loadJsonl("agent-trace.jsonl"), "run-123");
+if (gateStatus(snapshot) !== "PASS") {
+  throw new Error("Discard candidate action and rebuild from current state");
+}
 ```
 
 The core check is deterministic and performs no model or network call.

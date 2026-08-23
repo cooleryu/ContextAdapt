@@ -7,9 +7,11 @@ failures without overstating causality.
 ## Local development
 
 ```bash
-python3 -m contextadapt demo
-python3 -m contextadapt check examples/stale-action.jsonl
-python3 -m contextadapt diagnose examples/stale-action.jsonl
+npm install
+npm run check
+npx contextadapt demo
+npx contextadapt check examples/stale-action.jsonl
+npx contextadapt diagnose examples/stale-action.jsonl
 python3 -m unittest discover -s tests -v
 ```
 

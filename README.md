@@ -1,214 +1,146 @@
 # ContextAdapt
 
+[![CI](https://github.com/cooleryu/ContextAdapt/actions/workflows/ci.yml/badge.svg)](https://github.com/cooleryu/ContextAdapt/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Python: 3.9+](https://img.shields.io/badge/python-3.9%2B-3776AB.svg)](setup.cfg)
+[![Node.js 22+](https://img.shields.io/badge/node-%3E%3D22-339933.svg)](package.json)
 
-**Stop AI Agents from executing valid-looking plans built from stale context.**
+**Stop AI agents from executing a perfectly valid plan from the wrong moment.**
+
+Long Agent sessions do not only forget. They can retain an old, complete plan after the user changes the target, value, or permission—and then confidently execute it. ContextAdapt records what an action was based on and blocks the real tool call when that basis is stale or mis-bound.
 
 ![ContextAdapt catches a stale Agent action before execution](docs/assets/contextadapt-stale-action.svg)
 
-Long Agent sessions do not only forget information. They can retain an old,
-complete plan after the user has replaced it—and execute that plan against the
-current environment. ContextAdapt reconstructs the current state, keeps failed
-observations separate from trusted reads, and checks whether a planned action
-is still supported by current context and permission.
-
-The verifier runs locally and deterministically with no runtime dependencies.
-The optional hybrid path needs two semantic analyses supplied by an Agent host;
-the core never hides a model call or treats missing analyses as safety evidence.
-
-## See the failure in 10 seconds
+## The 10-second aha moment
 
 ```bash
-python3 -m contextadapt demo
+npx contextadapt demo
 ```
 
-That command runs directly from the checkout. No install, API key, or model
-call is required for the first demo. Install the package later when you want
-the `contextadapt` command available outside the repository.
-
-You will see one host resource policy, one old task, one replacement task, and
-a delayed Agent action:
+No API key or model call is needed. The demo shows:
 
 ```text
-CONTEXT TIMELINE
-  10  OLD      staging / timeout=30 / protected edit allowed
-  30  CURRENT  production / timeout=60 / protected edit forbidden
-  50  ACTION   staging/config.json / timeout=30 / protected edit
+10  OLD      staging / timeout=30 / protected edit allowed
+30  CURRENT  production / timeout=60 / protected edit forbidden
+50  ACTION   staging/config.json / timeout=30 / protected edit
 
 VERDICT  BLOCK
-  ! CRITICAL x1  Protected edit has no current permission.
-  ! HIGH     x1  Action was built from superseded context.
+! CRITICAL  Protected edit has no current permission.
+! HIGH      Action was built from superseded context.
 ```
 
-The built-in case is synthetic and deterministic. Its job is to make the
-supported safety check observable—not to pretend a fixture is a model result.
+That is ContextAdapt's first job: catch an action that still looks internally coherent but belongs to a context the user already replaced.
 
-## See AI and engineering check each other
-
-Natural-language updates are not safely comparable with string matching.
-ContextAdapt therefore accepts a field-level relation proposed by one AI run,
-requires a separately declared review run, and then applies deterministic checks:
+## Use it as an execution gate
 
 ```bash
-python3 -m contextadapt reconcile \
+npx contextadapt check examples/stale-action.jsonl
+```
+
+The command returns:
+
+- `PASS` and exit `0` when every candidate action is assessable and no supported risk is found;
+- `BLOCK` and exit `2` for a detected stale/mis-bound action;
+- `INSUFFICIENT_EVIDENCE` and exit `2` when provenance is missing.
+
+It fails closed: no action, missing basis, unknown operation, missing target policy, or incomplete permission evidence can never silently become `PASS`.
+
+## AI understands; engineering verifies
+
+Natural-language changes cannot be reduced safely to string matching. ContextAdapt uses a hybrid protocol:
+
+1. one AI run proposes a field-level relation between two context events;
+2. a separate AI run reviews the same raw events;
+3. deterministic TypeScript verifies chronology, entity binding, verbatim evidence, structured values, confidence, review digest, field agreement, permission authority, and unresolved fields;
+4. an executor guard checks the actual patch/path/command immediately before a tool runs.
+
+Run the transparent bundled fixture:
+
+```bash
+npx contextadapt reconcile \
   examples/stale-action.jsonl \
   examples/relation-proposal.json \
   examples/relation-review.json \
   --action-event old-action-replay
 ```
 
-The included proposal says that the newer request changes `environment`,
-`timeout`, and `edit_protected`. Every change cites an exact quote from both
-raw events. A SHA-256 content digest binds the review to that exact proposal;
-it does not prove the reviewer's identity or independence.
-ContextAdapt then verifies chronology, entity scope, verbatim evidence,
-structured values, declared-distinct run IDs, field agreement, confidence, and
-unresolved fields before it evaluates the action.
-
-The bundled proposal and review are transparent fixtures demonstrating the
-contract; the core command does not secretly call a model. For an explicit
-live test, ContextAdapt can launch two separate Luna runs through an existing
-Codex login:
+Or explicitly ask two Luna runs through your existing Codex login:
 
 ```bash
-python3 -m contextadapt analyze-codex \
+npx contextadapt analyze-codex \
   examples/stale-action.jsonl ticket-old ticket-current \
   --action-event old-action-replay \
   --allow-remote-content \
   --output-dir relation-run
 ```
 
-This opt-in command serializes only the selected two trace events into each
-analysis prompt, records provider-issued run identities and output digests, and
-never treats a disagreement as acceptance. Codex still supplies its own system
-and runtime context. ContextAdapt starts both runs in an empty temporary
-workspace, ignores project rules, and requests a read-only sandbox, but this is
-not a promise that the provider request contains only those event tokens.
-Different caller-supplied ID strings alone do not prove real independence.
-Missing, ambiguous, contradictory, or incomplete evidence never silently
-becomes `PASS`.
+The live path is opt-in because it sends the selected two events to Codex. A disagreement, missing provider identity, or incomplete turn is never accepted.
 
-See the [`hybrid relation protocol`](docs/hybrid-relations.md) for the division
-of responsibility between AI judgment and deterministic verification.
+## Block the actual tool call
 
-## Use it as an execution gate
-
-`check` is the first production-shaped use case. Feed it a structured Agent
-trace before executing candidate actions:
+Compile an accepted relation into a small deterministic policy:
 
 ```bash
-python3 -m contextadapt check examples/stale-action.jsonl
-```
-
-It prints `PASS`, `BLOCK`, or `INSUFFICIENT_EVIDENCE`. The process exits with
-`0` only on pass and `2` for either a supported risk or insufficient evidence,
-so the same command can gate CI, a shell workflow, or an Agent executor.
-
-If the trace has no candidate action or lacks the required provenance/action
-contract, it prints `INSUFFICIENT_EVIDENCE` and also exits `2`; absence of
-evidence is never presented as a safe real-Agent run.
-
-See the [`stale-action guard` integration guide](docs/action-guard.md) for
-placement, minimum provenance, exit codes, and a Python example.
-
-## Block the real tool call
-
-`check` answers whether a recorded action is safe enough to continue. The
-executor integrations go one step further: they inspect the actual patch,
-file path, or shell command immediately before Codex or OMP executes it.
-
-```bash
-python3 -m contextadapt compile-guard \
+npx contextadapt compile-guard \
   examples/stale-action.jsonl \
   examples/relation-proposal.json \
   examples/relation-review.json \
   --output .contextadapt/executor-guard.json
 ```
 
-The same accepted relation can then protect either Agent host:
+- **Codex:** the `PreToolUse` hook can deny a stale `apply_patch` or mutating shell command before execution.
+- **Oh My Pi / OMP:** the native TypeScript extension can block stale `write`, `edit`, `bash`, `python`, or `notebook` calls in process.
 
-- Codex: a native `PreToolUse` hook blocks a stale `apply_patch` before the
-  file changes;
-- OMP: a native `tool_call` extension blocks stale `write`, `edit`, or
-  mutating `bash` calls before execution.
-
-The retained paired test used two real `gpt-5.6-luna` Codex runs: the stale
-staging patch was denied and left the file unchanged, while the current
-production patch was allowed and written. The OMP test exercised its real
-agent loop and real write tool with a deterministic local decision source:
-the old write was blocked and the current write succeeded. See the
-[`real executor integration guide`](docs/executor-integrations.md) and
-[`machine-readable result`](artifacts/executor/real-executor-report.json).
-
-To see why an ordinary Codex event stream is not enough for a causal verdict:
-
-```bash
-python3 -m contextadapt check examples/codex-exec.trace.jsonl
-```
-
-It returns `INSUFFICIENT_EVIDENCE` and exit `2`, rather than inventing a safe
-action basis.
-
-ContextAdapt v0.1 catches two high-value failures:
-
-- an action built from an instruction or state that has been superseded;
-- a protected edit whose permission does not come from the current request.
-
-The trace is a trusted host record, not Agent-authored testimony. In
-particular, the host—not the planner—must assign event `source`, preserve raw
-user/policy events, and issue resource-protection policy events. The verifier
-can catch inconsistencies inside that record; it cannot authenticate a forged
-trace by itself.
-
-For deeper inspection, build the complete provenance-aware snapshot:
-
-
-```bash
-python3 -m contextadapt diagnose examples/stale-action.jsonl --format json
-python3 -m contextadapt diagnose examples/stale-action.jsonl --fail-on-risk
-```
+See the [executor integration guide](docs/executor-integrations.md).
 
 ## Import a real Codex run
 
-The first real adapter converts the documented stdout stream from
-`codex exec --json`:
-
 ```bash
 codex exec --json "Your task" > run.codex.jsonl
-python3 -m contextadapt import-codex run.codex.jsonl --output run.contextadapt.jsonl
-python3 -m contextadapt diagnose run.contextadapt.jsonl
+npx contextadapt import-codex run.codex.jsonl --output run.contextadapt.jsonl
+npx contextadapt diagnose run.contextadapt.jsonl
 ```
 
-The adapter redacts raw prompts, IDs, commands, outputs, errors, and Agent
-messages by default. It keeps event structure, status, usage, character counts,
-and fingerprints. See [`docs/codex-adapter.md`](docs/codex-adapter.md) for the
-privacy boundary and the explicit local-only `--include-content` option.
+Prompts, IDs, commands, outputs, errors, and Agent messages are fingerprinted and redacted by default. Use `--include-content` only for local evidence you have reviewed. A normal Codex stream does not expose an action's causal basis, so importing one alone correctly produces insufficient evidence rather than inventing provenance.
 
-The public Codex stream does not currently expose which state a command was
-planned from. The adapter therefore preserves the evidence it has and does not
-invent causal links. Full stale-action checks require an instrumented Agent
-host or a validated relation bundle; importing a normal Codex stream alone is
-not an automatic stale-context detector.
+## TypeScript API
 
-## What ContextAdapt builds
+```ts
+import { buildSnapshot, gateStatus, parseJsonl } from "contextadapt";
 
-A `contextadapt.trace.v1` stream becomes a `ContextSnapshot` containing:
+const events = parseJsonl(traceJsonl);
+const snapshot = buildSnapshot(events, "my-run");
+if (gateStatus(snapshot) !== "PASS") throw new Error("Do not execute");
+```
 
-- current instructions and state, selected by declared sequence;
-- last successful observations, kept separate from failed previews;
-- superseded events and candidate actions;
-- action-to-context and permission links;
-- deterministic risks with machine-readable evidence.
+Exports:
 
-Public input contract: [`docs/trace-format.md`](docs/trace-format.md).
-Contribution and evidence rules: [`CONTRIBUTING.md`](CONTRIBUTING.md).
-Release blockers and milestones: [`docs/release-checklist.md`](docs/release-checklist.md).
-Sensitive-data guidance: [`SECURITY.md`](SECURITY.md).
-[Codex and OMP executor hooks](docs/executor-integrations.md).
-[Apache-2.0 license](LICENSE).
+- `contextadapt` — schemas, snapshots, relation gate, action gate, executor guard;
+- `contextadapt/codex` — privacy-safe event adapter and optional two-run semantic analysis;
+- `contextadapt/omp` — native OMP pre-tool extension.
 
-> Alpha scope: v1 imports the public `codex exec --json` stream and expects
-> structured provenance fields for causal diagnostics. It does not parse
-> arbitrary private Codex, Claude Code, or other Agent logs. `PASS` means no
-> currently supported risk was found; it is not a universal safety guarantee.
+## Architecture and trust boundary
+
+```text
+Agent host trace -> relation proposal + independent review -> deterministic gate
+                                                        -> executor guard -> real tool call
+```
+
+The host—not the planner—must assign event sources, preserve raw user/policy events, classify protected resources, and bind actual tool arguments to the guard. ContextAdapt detects contradictions within that trusted record; it cannot authenticate a forged host trace by itself. `PASS` means no currently supported risk was found, not universal safety.
+
+The npm package is TypeScript-first and has no runtime dependencies. The frozen Python v0.1 implementation and its 56 tests remain under [`research/python`](research/python) as an executable migration oracle; cross-language golden tests prevent semantic drift.
+
+## Develop
+
+```bash
+npm install
+npm run check
+```
+
+`npm run check` performs strict type checking, TypeScript/security tests, byte-level Python-oracle comparisons, a production build, and package inspection.
+
+- [Trace contract](docs/trace-format.md)
+- [Hybrid relation protocol](docs/hybrid-relations.md)
+- [Codex adapter privacy boundary](docs/codex-adapter.md)
+- [Security guidance](SECURITY.md)
+- [Contributing](CONTRIBUTING.md)
+- [Apache-2.0 license](LICENSE)

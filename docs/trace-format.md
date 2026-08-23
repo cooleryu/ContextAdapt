@@ -5,23 +5,23 @@ Comment lines beginning with `#` are ignored.
 
 ## Required fields
 
-| Field | Type | Meaning |
-|---|---|---|
-| `event_id` | string | Unique, stable identifier within the trace |
-| `source` | string | Host-recorded producer such as `user`, `policy`, or `read_file` |
-| `kind` | string | `state`, `observation`, `action`, `instruction`, `policy`, or `note` |
+| Field      | Type   | Meaning                                                              |
+| ---------- | ------ | -------------------------------------------------------------------- |
+| `event_id` | string | Unique, stable identifier within the trace                           |
+| `source`   | string | Host-recorded producer such as `user`, `policy`, or `read_file`      |
+| `kind`     | string | `state`, `observation`, `action`, `instruction`, `policy`, or `note` |
 
 ## Optional fields
 
-| Field | Type | Meaning |
-|---|---|---|
-| `entity` | string | The stateful object, for example `ticket:123` or `file:config.json` |
-| `sequence` | integer | Authoritative ordering within the same entity |
-| `observed_at` | string | Ingestion timestamp used only as a deterministic tie-breaker |
-| `success` | boolean | Whether an `observation` succeeded |
-| `facts` | object | Structured facts extracted from the event |
-| `links` | object | Provenance relationships between event IDs |
-| `text` | string | Human-readable raw evidence or a redacted excerpt |
+| Field         | Type    | Meaning                                                             |
+| ------------- | ------- | ------------------------------------------------------------------- |
+| `entity`      | string  | The stateful object, for example `ticket:123` or `file:config.json` |
+| `sequence`    | integer | Authoritative ordering within the same entity                       |
+| `observed_at` | string  | Ingestion timestamp used only as a deterministic tie-breaker        |
+| `success`     | boolean | Whether an `observation` succeeded                                  |
+| `facts`       | object  | Structured facts extracted from the event                           |
+| `links`       | object  | Provenance relationships between event IDs                          |
+| `text`        | string  | Human-readable raw evidence or a redacted excerpt                   |
 
 ## Ordering rules
 
@@ -67,7 +67,18 @@ cryptographically authenticate an arbitrary JSONL file.
 ## Example
 
 ```json
-{"event_id":"ticket-current","source":"user","kind":"state","entity":"ticket:deploy","sequence":30,"facts":{"environment":"production","timeout":60,"edit_protected":false}}
+{
+  "event_id": "ticket-current",
+  "source": "user",
+  "kind": "state",
+  "entity": "ticket:deploy",
+  "sequence": 30,
+  "facts": {
+    "environment": "production",
+    "timeout": 60,
+    "edit_protected": false
+  }
+}
 ```
 
 See [`examples/stale-action.jsonl`](../examples/stale-action.jsonl) for a

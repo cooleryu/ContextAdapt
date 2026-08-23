@@ -8,8 +8,8 @@ private desktop databases or internal session files.
 
 ```bash
 codex exec --json "Your task" > run.codex.jsonl
-python3 -m contextadapt import-codex run.codex.jsonl --output run.contextadapt.jsonl
-python3 -m contextadapt diagnose run.contextadapt.jsonl
+npx contextadapt import-codex run.codex.jsonl --output run.contextadapt.jsonl
+npx contextadapt diagnose run.contextadapt.jsonl
 ```
 
 Codex diagnostics and warnings belong on stderr. Do not merge stderr into the
@@ -20,7 +20,7 @@ The official event stream does not currently repeat the original prompt. If a
 local prompt file is available, add its fingerprint to the trace with:
 
 ```bash
-python3 -m contextadapt import-codex run.codex.jsonl \
+npx contextadapt import-codex run.codex.jsonl \
   --instruction-file prompt.txt \
   --output run.contextadapt.jsonl
 ```
