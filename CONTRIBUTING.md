@@ -9,9 +9,9 @@ failures without overstating causality.
 ```bash
 npm install
 npm run check
-npx contextadapt demo
-npx contextadapt check examples/stale-action.jsonl
-npx contextadapt diagnose examples/stale-action.jsonl
+npm run contextadapt -- demo
+npm run contextadapt -- check examples/stale-action.jsonl
+npm run contextadapt -- diagnose examples/stale-action.jsonl
 python3 -m unittest discover -s tests -v
 ```
 

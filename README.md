@@ -13,7 +13,10 @@ Long Agent sessions do not only forget. They can retain an old, complete plan af
 ## The 10-second aha moment
 
 ```bash
-npx contextadapt demo
+git clone https://github.com/cooleryu/ContextAdapt.git
+cd ContextAdapt
+npm install
+npm run demo
 ```
 
 No API key or model call is needed. The demo shows:
@@ -33,7 +36,7 @@ That is ContextAdapt's first job: catch an action that still looks internally co
 ## Use it as an execution gate
 
 ```bash
-npx contextadapt check examples/stale-action.jsonl
+npm run contextadapt -- check examples/stale-action.jsonl
 ```
 
 The command returns:
@@ -56,7 +59,7 @@ Natural-language changes cannot be reduced safely to string matching. ContextAda
 Run the transparent bundled fixture:
 
 ```bash
-npx contextadapt reconcile \
+npm run contextadapt -- reconcile \
   examples/stale-action.jsonl \
   examples/relation-proposal.json \
   examples/relation-review.json \
@@ -66,7 +69,7 @@ npx contextadapt reconcile \
 Or explicitly ask two Luna runs through your existing Codex login:
 
 ```bash
-npx contextadapt analyze-codex \
+npm run contextadapt -- analyze-codex \
   examples/stale-action.jsonl ticket-old ticket-current \
   --action-event old-action-replay \
   --allow-remote-content \
@@ -80,7 +83,7 @@ The live path is opt-in because it sends the selected two events to Codex. A dis
 Compile an accepted relation into a small deterministic policy:
 
 ```bash
-npx contextadapt compile-guard \
+npm run contextadapt -- compile-guard \
   examples/stale-action.jsonl \
   examples/relation-proposal.json \
   examples/relation-review.json \
@@ -96,8 +99,8 @@ See the [executor integration guide](docs/executor-integrations.md).
 
 ```bash
 codex exec --json "Your task" > run.codex.jsonl
-npx contextadapt import-codex run.codex.jsonl --output run.contextadapt.jsonl
-npx contextadapt diagnose run.contextadapt.jsonl
+npm run contextadapt -- import-codex run.codex.jsonl --output run.contextadapt.jsonl
+npm run contextadapt -- diagnose run.contextadapt.jsonl
 ```
 
 Prompts, IDs, commands, outputs, errors, and Agent messages are fingerprinted and redacted by default. Use `--include-content` only for local evidence you have reviewed. A normal Codex stream does not expose an action's causal basis, so importing one alone correctly produces insufficient evidence rather than inventing provenance.
@@ -135,6 +138,8 @@ The npm package is TypeScript-first and has no runtime dependencies. The frozen 
 npm install
 npm run check
 ```
+
+The GitHub source release is usable now. The npm tarball has passed fresh-install testing, but the registry package has not been published yet; after that separate release step, `npx contextadapt ...` will be the shorter equivalent.
 
 `npm run check` performs strict type checking, TypeScript/security tests, byte-level Python-oracle comparisons, a production build, and package inspection.
 

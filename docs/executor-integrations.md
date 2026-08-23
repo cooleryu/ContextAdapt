@@ -20,7 +20,7 @@ First create or obtain an accepted proposal/review bundle. The bundled fixture
 is useful for seeing the integration shape:
 
 ```bash
-npx contextadapt compile-guard \
+npm run contextadapt -- compile-guard \
   examples/stale-action.jsonl \
   examples/relation-proposal.json \
   examples/relation-review.json \

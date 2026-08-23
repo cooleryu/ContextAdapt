@@ -46,6 +46,9 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "prepare": "npm run build",
+    "contextadapt": "node dist/packages/cli/src/bin.js",
+    "demo": "npm run contextadapt -- demo",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc -p tsconfig.json --noEmit",

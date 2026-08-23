@@ -17,7 +17,7 @@ Agent plans action
 Agent records based_on_event + permission_event
         |
         v
-npx contextadapt check trace.jsonl
+npm run contextadapt -- check trace.jsonl
         |
         +-- PASS (exit 0)  --> host may continue with its own safety checks
         |
@@ -58,8 +58,8 @@ JSONL verifier can recover that lost trust boundary.
 Export the complete built-in example for inspection:
 
 ```bash
-npx contextadapt demo --trace-out demo.jsonl
-npx contextadapt check demo.jsonl
+npm run contextadapt -- demo --trace-out demo.jsonl
+npm run contextadapt -- check demo.jsonl
 ```
 
 ## Exit contract

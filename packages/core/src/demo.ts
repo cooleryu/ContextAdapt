@@ -146,8 +146,8 @@ export function renderDemo(snapshot: ContextSnapshot): string {
     "  instead of executing a valid-looking but stale plan.",
     "",
     "This seven-event scenario is synthetic and deterministic.",
-    "Use `npx contextadapt demo --trace-out demo.jsonl` to inspect the evidence.",
-    "Use `npx contextadapt check TRACE.jsonl` to gate a structured Agent trace.",
+    "Use `contextadapt demo --trace-out demo.jsonl` to inspect the evidence.",
+    "Use `contextadapt check TRACE.jsonl` to gate a structured Agent trace.",
     "",
   ].join("\n");
 }
