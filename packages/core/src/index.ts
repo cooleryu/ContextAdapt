@@ -7,3 +7,4 @@ export * from "./relations.js";
 export * from "./executor-guard.js";
 export * from "./presentation.js";
 export * from "./demo.js";
+export * from "./recommend.js";

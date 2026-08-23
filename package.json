@@ -1,7 +1,7 @@
 {
   "name": "contextadapt",
   "version": "0.2.0",
-  "description": "Stop AI agents from executing valid-looking plans built from stale context.",
+  "description": "Help AI agents use the smallest context that can still act safely.",
   "license": "Apache-2.0",
   "type": "module",
   "repository": {
@@ -40,6 +40,7 @@
   "files": [
     "dist/",
     "schema/",
+    "examples/context-recommendation.json",
     "README.md",
     "CHANGELOG.md",
     "LICENSE"
@@ -49,6 +50,7 @@
     "prepare": "npm run build",
     "contextadapt": "node dist/packages/cli/src/bin.js",
     "demo": "npm run contextadapt -- demo",
+    "demo:recommend": "npm run contextadapt -- recommend examples/context-recommendation.json",
     "experiment:long-context": "node --import tsx experiments/long-context/src/run.ts",
     "experiment:long-context:dry": "node --import tsx experiments/long-context/src/run.ts --dry-run",
     "format": "prettier --write .",

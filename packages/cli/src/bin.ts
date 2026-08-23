@@ -14,9 +14,12 @@ import {
   gateStatus,
   loadExecutorGuard,
   loadJsonl,
+  parseRecommendationInput,
+  recommendContext,
   renderCheck,
   renderDemo,
   renderDiagnosis,
+  renderRecommendation,
   validateRelationBundle,
   type ContextSnapshot,
   type ExecutorDecision,
@@ -83,7 +86,7 @@ const writeEnsured = async (path: string, content: string): Promise<void> => {
 const traceStem = (path: string): string => basename(path, extname(path));
 
 function help(): string {
-  return `ContextAdapt — stop Agent actions built from stale context\n\nUsage: contextadapt <command> [options]\n\nCommands:\n  demo              Run the zero-configuration safety demo\n  check TRACE       Gate candidate actions (exit 2 unless PASS)\n  diagnose TRACE    Build a provenance-aware snapshot\n  import-codex SRC  Convert codex exec --json output\n  reconcile         Validate a semantic relation and optional action\n  analyze-codex     Run two independent Codex semantic analyses\n  compile-guard     Compile an accepted relation into an executor guard\n  executor-hook     Evaluate one native Codex or OMP pre-tool call\n`;
+  return `ContextAdapt — use the smallest context that can still act safely\n\nUsage: contextadapt <command> [options]\n\nCommands:\n  recommend INPUT   Select 200K, 400K, 1M-window, or block\n  demo              Run the zero-configuration safety demo\n  check TRACE       Gate candidate actions (exit 2 unless PASS)\n  diagnose TRACE    Build a provenance-aware snapshot\n  import-codex SRC  Convert codex exec --json output\n  reconcile         Validate a semantic relation and optional action\n  analyze-codex     Run two independent Codex semantic analyses\n  compile-guard     Compile an accepted relation into an executor guard\n  executor-hook     Evaluate one native Codex or OMP pre-tool call\n`;
 }
 
 function relationText(
@@ -149,6 +152,23 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
     return command ? 0 : 1;
   }
   try {
+    if (command === "recommend") {
+      const path = positional[0];
+      if (!path) throw new Error("recommend requires INPUT");
+      let value: unknown;
+      if (path === "-") {
+        value = JSON.parse(await readStdin());
+      } else {
+        value = await jsonObject(path);
+      }
+      const result = recommendContext(parseRecommendationInput(value));
+      process.stdout.write(
+        flag(flags, "format") === "json"
+          ? `${JSON.stringify(result, null, 2)}\n`
+          : renderRecommendation(result),
+      );
+      return result.recommendation === "BLOCK_AND_REFRESH" ? 2 : 0;
+    }
     if (command === "demo") {
       const snapshot = demoSnapshot();
       const out = flag(flags, "trace-out");

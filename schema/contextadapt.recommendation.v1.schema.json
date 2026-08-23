@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cooleryu/ContextAdapt/blob/main/schema/contextadapt.recommendation.v1.schema.json",
+  "title": "ContextAdapt recommendation result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "input_schema_version",
+    "task_id",
+    "recommendation",
+    "recommended_tier",
+    "required_evidence",
+    "tier_assessments",
+    "attempted_input_tokens",
+    "expected_total_input_tokens",
+    "always_largest_input_tokens",
+    "estimated_savings_tokens",
+    "estimated_savings_percent",
+    "maximum_escalations",
+    "gate_required",
+    "reasons"
+  ],
+  "properties": {
+    "schema_version": { "const": "contextadapt.recommendation.v1" },
+    "input_schema_version": {
+      "const": "contextadapt.recommendation-input.v1"
+    },
+    "task_id": { "type": "string", "minLength": 1 },
+    "recommendation": {
+      "enum": ["USE_200K", "USE_400K", "USE_1M_WINDOW", "BLOCK_AND_REFRESH"]
+    },
+    "recommended_tier": {
+      "type": ["string", "null"],
+      "enum": ["200K", "400K", "1M_WINDOW", null]
+    },
+    "required_evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "object" }
+    },
+    "tier_assessments": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "tier",
+          "estimated_input_tokens",
+          "available_evidence",
+          "stale_evidence",
+          "unauthorized_evidence",
+          "unresolved_contradictions",
+          "safe",
+          "missing_evidence"
+        ]
+      }
+    },
+    "attempted_input_tokens": { "type": "integer", "minimum": 0 },
+    "expected_total_input_tokens": { "type": "integer", "minimum": 0 },
+    "always_largest_input_tokens": { "type": "integer", "minimum": 1 },
+    "estimated_savings_tokens": { "type": ["integer", "null"] },
+    "estimated_savings_percent": { "type": ["number", "null"] },
+    "maximum_escalations": { "enum": [0, 1] },
+    "gate_required": { "const": true },
+    "reasons": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}

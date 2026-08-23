@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cooleryu/ContextAdapt/blob/main/schema/contextadapt.recommendation-input.v1.schema.json",
+  "title": "ContextAdapt recommendation input v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "task_id", "required_evidence", "tiers"],
+  "properties": {
+    "schema_version": {
+      "const": "contextadapt.recommendation-input.v1"
+    },
+    "task_id": { "type": "string", "minLength": 1 },
+    "required_evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["evidence_id", "kind", "description"],
+        "properties": {
+          "evidence_id": { "type": "string", "minLength": 1 },
+          "kind": {
+            "enum": [
+              "target",
+              "value",
+              "permission",
+              "correction",
+              "observation",
+              "dependency"
+            ]
+          },
+          "description": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "tiers": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tier",
+          "estimated_input_tokens",
+          "available_evidence",
+          "stale_evidence",
+          "unauthorized_evidence",
+          "unresolved_contradictions"
+        ],
+        "properties": {
+          "tier": { "enum": ["200K", "400K", "1M_WINDOW"] },
+          "estimated_input_tokens": { "type": "integer", "minimum": 1 },
+          "available_evidence": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "stale_evidence": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "unauthorized_evidence": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "unresolved_contradictions": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "prior_attempt_input_tokens": {
+      "type": "array",
+      "maxItems": 1,
+      "items": { "type": "integer", "minimum": 1 }
+    },
+    "maximum_escalations": { "enum": [0, 1] }
+  }
+}

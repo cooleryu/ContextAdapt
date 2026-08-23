@@ -1,0 +1,49 @@
+{
+  "schema_version": "contextadapt.recommendation-input.v1",
+  "task_id": "deploy-production-timeout",
+  "required_evidence": [
+    {
+      "evidence_id": "tool-460",
+      "kind": "observation",
+      "description": "Verified production config has retries=2"
+    },
+    {
+      "evidence_id": "policy-461",
+      "kind": "permission",
+      "description": "Production config is not a protected resource"
+    },
+    {
+      "evidence_id": "user-482",
+      "kind": "correction",
+      "description": "Latest request targets production with timeout=60"
+    }
+  ],
+  "tiers": [
+    {
+      "tier": "200K",
+      "estimated_input_tokens": 197800,
+      "available_evidence": ["tool-460"],
+      "stale_evidence": [],
+      "unauthorized_evidence": [],
+      "unresolved_contradictions": []
+    },
+    {
+      "tier": "400K",
+      "estimated_input_tokens": 393700,
+      "available_evidence": ["tool-460", "policy-461", "user-482"],
+      "stale_evidence": [],
+      "unauthorized_evidence": [],
+      "unresolved_contradictions": []
+    },
+    {
+      "tier": "1M_WINDOW",
+      "estimated_input_tokens": 883300,
+      "available_evidence": ["tool-460", "policy-461", "user-482"],
+      "stale_evidence": [],
+      "unauthorized_evidence": [],
+      "unresolved_contradictions": []
+    }
+  ],
+  "prior_attempt_input_tokens": [],
+  "maximum_escalations": 1
+}

@@ -8,6 +8,8 @@ The product must answer a user-facing question: does this task need roughly 200K
 
 The execution gate is the safety backstop. The recommendation is the primary product decision.
 
+Current status: the recommendation schema, deterministic fail-closed selector, full prior-attempt cost accounting, explanation output, and `contextadapt recommend` CLI are implemented. The input is currently a host-authored evidence-coverage manifest. Automatic trace-to-evidence mapping is the next P0 slice.
+
 ## P0 user experience
 
 The first product flow should look like:
@@ -117,9 +119,9 @@ If the adaptive policy cannot meet this bar, publish the failure and improve the
 
 ## Implementation order
 
-1. Define TypeScript schemas for evidence requirements and context recommendations.
-2. Add `contextadapt recommend` with deterministic explanation output.
-3. Implement tier renderers and full-cost accounting.
+1. ✅ Define TypeScript schemas for evidence requirements and context recommendations.
+2. ✅ Add `contextadapt recommend` with deterministic explanation output and prior-attempt cost accounting.
+3. Implement automatic trace-to-evidence mapping and tier renderers.
 4. Connect recommendation, task execution, action gate, and one-step recovery.
 5. Build the frozen four-family paired experiment.
 6. Run the live model matrix and publish comparative results.

@@ -2,6 +2,7 @@
 
 ## 0.2.0
 
+- Added the first P0 `contextadapt recommend` slice: a fail-closed evidence-coverage contract that selects 200K, 400K, 1M-window, or block, with full prior-attempt cost accounting.
 - Migrated the product runtime, CLI, Codex adapter, semantic analyzer, action gate, relation verifier, and executor guard to strict TypeScript.
 - Added a native in-process Oh My Pi / OMP extension.
 - Added npm package exports for the core, Codex, and OMP integrations.

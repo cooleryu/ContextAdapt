@@ -10,6 +10,32 @@ Too little context can drop the current target, a corrected value, or a revoked 
 
 Version 0.2 provides the evidence trace, relation engine, execution gate, Codex adapter, and OMP integration needed for that safety check. Dynamic `USE_200K` / `USE_400K` / `USE_1M_WINDOW` recommendation is the current P0 product work; it is not presented as finished. See the [product roadmap](docs/product-roadmap.md).
 
+## First adaptive decision
+
+The first P0 slice is runnable now:
+
+```bash
+npm run demo:recommend
+```
+
+```text
+RECOMMENDATION       USE_400K
+Smallest safe tier: 400K
+Expected total input: 393,700 tokens
+Always-largest baseline: 883,300 tokens
+Estimated saving: 489,600 tokens (55.43%)
+
+! 200K       missing policy-461, user-482
+✓ 400K       safe
+✓ 1M_WINDOW  safe
+
+Execution gate: REQUIRED
+```
+
+The command fails closed with exit `2` when no tier has complete, current, authorized, contradiction-free evidence. It also includes previous failed attempts in total cost, so an expensive escalation can correctly report negative savings.
+
+This slice consumes a host-authored evidence-coverage manifest such as [`examples/context-recommendation.json`](examples/context-recommendation.json). Automatic trace-to-evidence extraction and live adaptive execution remain P0 work; the CLI does not pretend they are already solved.
+
 ![ContextAdapt catches a stale Agent action before execution](docs/assets/contextadapt-stale-action.svg)
 
 ## The 10-second aha moment
@@ -154,6 +180,8 @@ The GitHub source release is usable now. The npm tarball has passed fresh-instal
 `npm run check` performs strict type checking, TypeScript/security tests, byte-level Python-oracle comparisons, a production build, and package inspection.
 
 - [Trace contract](docs/trace-format.md)
+- [Recommendation input schema](schema/contextadapt.recommendation-input.v1.schema.json)
+- [Recommendation result schema](schema/contextadapt.recommendation.v1.schema.json)
 - [Hybrid relation protocol](docs/hybrid-relations.md)
 - [Codex adapter privacy boundary](docs/codex-adapter.md)
 - [Product north-star roadmap](docs/product-roadmap.md)
