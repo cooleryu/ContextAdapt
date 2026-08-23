@@ -1,0 +1,4 @@
+interface:
+  display_name: "ContextAdapt North Star"
+  short_description: "Choose the smallest context that can act safely"
+  default_prompt: "Use $contextadapt-north-star to evaluate this ContextAdapt change against the product north star."
