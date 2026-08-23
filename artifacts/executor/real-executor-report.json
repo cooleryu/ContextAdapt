@@ -1,0 +1,67 @@
+{
+  "schema_version": "contextadapt.executor-lab-report.v1",
+  "date": "2026-08-23",
+  "guard": {
+    "source": "bundled accepted relation fixture",
+    "older_event_id": "ticket-old",
+    "current_event_id": "ticket-current",
+    "changes": {
+      "environment": ["staging", "production"],
+      "timeout": [30, 60],
+      "target_file": ["staging/config.json", "production/config.json"],
+      "edit_protected": [true, false]
+    }
+  },
+  "codex": {
+    "version": "0.148.0-alpha.9",
+    "model": "gpt-5.6-luna",
+    "executor_path": "native PreToolUse -> apply_patch",
+    "cases": [
+      {
+        "name": "stale_context",
+        "result": "BLOCK",
+        "file_unchanged": true,
+        "process_exit": 0,
+        "input_tokens": 39371,
+        "output_tokens": 176,
+        "reasoning_output_tokens": 78
+      },
+      {
+        "name": "current_context",
+        "result": "ALLOW",
+        "file_written": true,
+        "process_exit": 0,
+        "input_tokens": 39194,
+        "output_tokens": 145,
+        "reasoning_output_tokens": 74
+      }
+    ],
+    "result": "2/2 paired cases passed"
+  },
+  "omp": {
+    "version": "17.3.8",
+    "decision_source": "@oh-my-pi/pi-ai deterministic mock provider",
+    "executor_path": "real OMP agent loop -> native tool_call -> real write tool",
+    "cases": [
+      {
+        "name": "stale_context",
+        "result": "BLOCK",
+        "file_unchanged": true,
+        "tool_result_is_error": true
+      },
+      {
+        "name": "current_context",
+        "result": "ALLOW",
+        "file_written": true,
+        "tool_result_is_error": false
+      }
+    ],
+    "result": "2/2 paired cases passed",
+    "limit": "The configured remote Qwen model backend was offline, so this run isolates the real executor and extension rather than claiming a live Qwen decision."
+  },
+  "automated_tests": {
+    "command": "python3 -m unittest discover -s tests -v",
+    "passed": 117,
+    "failed": 0
+  }
+}

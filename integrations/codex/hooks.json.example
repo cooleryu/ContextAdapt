@@ -1,0 +1,18 @@
+{
+  "description": "ContextAdapt pre-execution file and shell guard",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "contextadapt executor-hook codex --policy .contextadapt/executor-guard.json --format native",
+            "timeout": 30,
+            "statusMessage": "ContextAdapt is checking current context"
+          }
+        ]
+      }
+    ]
+  }
+}

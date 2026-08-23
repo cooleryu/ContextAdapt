@@ -1,0 +1,178 @@
+{
+  "schema_version": "contextadapt.snapshot.v1",
+  "input_schema_version": "contextadapt.trace.v1",
+  "trace_id": "stale-action",
+  "event_count": 7,
+  "current_state": [
+    {
+      "event_id": "user-current",
+      "source": "user",
+      "kind": "instruction",
+      "entity": "request:active",
+      "sequence": 60,
+      "observed_at": null,
+      "success": null,
+      "facts": {
+        "request": "execute current production change and verify"
+      },
+      "links": {},
+      "text": "Continue with the current request."
+    },
+    {
+      "event_id": "policy-staging-config",
+      "source": "policy",
+      "kind": "policy",
+      "entity": "resource:staging/config.json",
+      "sequence": 5,
+      "observed_at": null,
+      "success": null,
+      "facts": {
+        "resource": "staging/config.json",
+        "protected": true
+      },
+      "links": {},
+      "text": "Host policy classifies staging/config.json as protected."
+    },
+    {
+      "event_id": "ticket-current",
+      "source": "user",
+      "kind": "state",
+      "entity": "ticket:deploy",
+      "sequence": 30,
+      "observed_at": null,
+      "success": null,
+      "facts": {
+        "environment": "production",
+        "timeout": 60,
+        "edit_protected": false,
+        "target_file": "production/config.json",
+        "authority": "user",
+        "protected_scope": []
+      },
+      "links": {
+        "replaces": "ticket-old"
+      },
+      "text": "Replace that plan: deploy production/config.json in production with timeout 60; protected edits are forbidden."
+    }
+  ],
+  "last_successful_observations": [
+    {
+      "event_id": "read-prod-ok",
+      "source": "read_file",
+      "kind": "observation",
+      "entity": "file:production/config.json",
+      "sequence": 20,
+      "observed_at": null,
+      "success": true,
+      "facts": {
+        "timeout": 45,
+        "retries": 3
+      },
+      "links": {},
+      "text": "Successful production read."
+    }
+  ],
+  "latest_failures": [
+    {
+      "event_id": "read-prod-failed",
+      "source": "read_file",
+      "kind": "observation",
+      "entity": "file:production/config.json",
+      "sequence": 40,
+      "observed_at": null,
+      "success": false,
+      "facts": {
+        "preview_retries": 1
+      },
+      "links": {},
+      "text": "Refresh failed; preview is unverified."
+    }
+  ],
+  "candidate_actions": [
+    {
+      "event_id": "old-action-replay",
+      "source": "planner-replay",
+      "kind": "action",
+      "entity": "action:deploy",
+      "sequence": 50,
+      "observed_at": null,
+      "success": null,
+      "facts": {
+        "target_file": "staging/config.json",
+        "operation": "write",
+        "context_entity": "ticket:deploy",
+        "environment": "staging",
+        "timeout": 30,
+        "retries": 8,
+        "edit_protected": true,
+        "context_fields_used": [
+          "environment",
+          "timeout",
+          "edit_protected",
+          "target_file"
+        ]
+      },
+      "links": {
+        "based_on_event": "ticket-old",
+        "permission_event": "ticket-old"
+      },
+      "text": "Delayed replay of a complete but stale action."
+    }
+  ],
+  "superseded_events": [
+    {
+      "event_id": "ticket-old",
+      "source": "user",
+      "kind": "state",
+      "entity": "ticket:deploy",
+      "sequence": 10,
+      "observed_at": null,
+      "success": null,
+      "facts": {
+        "environment": "staging",
+        "timeout": 30,
+        "edit_protected": true,
+        "target_file": "staging/config.json",
+        "authority": "user",
+        "protected_scope": [
+          "staging/config.json"
+        ]
+      },
+      "links": {},
+      "text": "Deploy staging/config.json in staging with timeout 30; protected edits are allowed for staging/config.json."
+    }
+  ],
+  "notes": [],
+  "risks": [
+    {
+      "type": "unbound_protected_permission",
+      "severity": "critical",
+      "event_id": "old-action-replay",
+      "evidence": {
+        "permission_event": "ticket-old",
+        "target_file": "staging/config.json",
+        "reason": "protected edit lacks a current trusted permission for the exact target and context entity"
+      }
+    },
+    {
+      "type": "stale_action",
+      "severity": "high",
+      "event_id": "old-action-replay",
+      "evidence": {
+        "based_on_event": "ticket-old",
+        "based_on_entity": "ticket:deploy",
+        "based_on_sequence": 10,
+        "reason": "action is based on an event that is no longer current for its entity"
+      }
+    }
+  ],
+  "risk_summary": {
+    "total": 2,
+    "critical": 1,
+    "high": 1
+  },
+  "gate_evidence": {
+    "candidate_action_count": 1,
+    "assessable_action_count": 1
+  }
+}
