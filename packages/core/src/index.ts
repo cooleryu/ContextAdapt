@@ -8,3 +8,7 @@ export * from "./executor-guard.js";
 export * from "./presentation.js";
 export * from "./demo.js";
 export * from "./recommend.js";
+export * from "./evidence-map.js";
+export * from "./adaptive-context.js";
+export * from "./paper-eval.js";
+export * from "./working-set.js";

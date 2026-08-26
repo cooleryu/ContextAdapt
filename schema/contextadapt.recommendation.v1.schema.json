@@ -13,6 +13,7 @@
     "required_evidence",
     "tier_assessments",
     "attempted_input_tokens",
+    "preflight_input_tokens",
     "expected_total_input_tokens",
     "always_largest_input_tokens",
     "estimated_savings_tokens",
@@ -58,6 +59,7 @@
       }
     },
     "attempted_input_tokens": { "type": "integer", "minimum": 0 },
+    "preflight_input_tokens": { "type": "integer", "minimum": 0 },
     "expected_total_input_tokens": { "type": "integer", "minimum": 0 },
     "always_largest_input_tokens": { "type": "integer", "minimum": 1 },
     "estimated_savings_tokens": { "type": ["integer", "null"] },

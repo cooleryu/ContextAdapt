@@ -120,6 +120,15 @@ test("counts prior failed attempts in total cost", () => {
   assert.equal(result.attempted_input_tokens, 197800);
 });
 
+test("counts semantic preflight cost before claiming savings", () => {
+  const value = recommendationInput();
+  value.preflight_input_tokens = 10_000;
+  const result = recommendContext(parseRecommendationInput(value));
+  assert.equal(result.preflight_input_tokens, 10_000);
+  assert.equal(result.expected_total_input_tokens, 403_700);
+  assert.equal(result.estimated_savings_tokens, 479_600);
+});
+
 test("reports negative savings when escalation costs more than starting large", () => {
   const value = recommendationInput();
   value.prior_attempt_input_tokens = [197800];
@@ -173,9 +182,15 @@ test("CLI recommends 400K in text and JSON and blocks invalid input", () => {
 
   const text = run(["recommend", fixture]);
   assert.equal(text.status, 0, text.stderr);
-  assert.match(text.stdout, /RECOMMENDATION\s+USE_400K/);
+  assert.match(text.stdout, /ContextAdapt: use 400K/);
   assert.match(text.stdout, /55\.43%/);
-  assert.match(text.stdout, /Execution gate:\s+REQUIRED/);
+  assert.match(text.stdout, /tool call is still gated/);
+  assert.equal(text.stdout.trim().split("\n").length, 4);
+
+  const detailed = run(["recommend", fixture, "--details"]);
+  assert.equal(detailed.status, 0, detailed.stderr);
+  assert.match(detailed.stdout, /RECOMMENDATION\s+USE_400K/);
+  assert.match(detailed.stdout, /Execution gate:\s+REQUIRED/);
 
   const json = run(["recommend", fixture, "--format", "json"]);
   assert.equal(json.status, 0, json.stderr);

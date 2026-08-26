@@ -42,6 +42,7 @@ export interface ContextRecommendationInput {
   required_evidence: EvidenceRequirement[];
   tiers: ContextTierInput[];
   prior_attempt_input_tokens: number[];
+  preflight_input_tokens?: number;
   maximum_escalations: 0 | 1;
 }
 
@@ -59,6 +60,7 @@ export interface ContextRecommendationResult {
   required_evidence: EvidenceRequirement[];
   tier_assessments: ContextTierAssessment[];
   attempted_input_tokens: number;
+  preflight_input_tokens: number;
   expected_total_input_tokens: number;
   always_largest_input_tokens: number;
   estimated_savings_tokens: number | null;
@@ -140,6 +142,7 @@ export function parseRecommendationInput(
       "required_evidence",
       "tiers",
       "prior_attempt_input_tokens",
+      "preflight_input_tokens",
       "maximum_escalations",
     ],
     "input",
@@ -244,10 +247,12 @@ export function parseRecommendationInput(
   );
   for (let index = 1; index < orderedTiers.length; index += 1) {
     if (
-      orderedTiers[index]!.estimated_input_tokens <=
+      orderedTiers[index]!.estimated_input_tokens <
       orderedTiers[index - 1]!.estimated_input_tokens
     ) {
-      throw new Error("estimated_input_tokens must increase with context tier");
+      throw new Error(
+        "estimated_input_tokens must not decrease with context tier",
+      );
     }
   }
 
@@ -268,6 +273,13 @@ export function parseRecommendationInput(
   if (priorAttempts.length > maximumEscalations) {
     throw new Error("prior_attempt_input_tokens exceeds maximum_escalations");
   }
+  const preflightInputTokens =
+    value.preflight_input_tokens === undefined
+      ? 0
+      : nonNegativeInteger(
+          value.preflight_input_tokens,
+          "preflight_input_tokens",
+        );
 
   return {
     schema_version: RECOMMENDATION_INPUT_SCHEMA_VERSION,
@@ -275,8 +287,16 @@ export function parseRecommendationInput(
     required_evidence: requiredEvidence,
     tiers: orderedTiers,
     prior_attempt_input_tokens: priorAttempts,
+    preflight_input_tokens: preflightInputTokens,
     maximum_escalations: maximumEscalations,
   };
+}
+
+function nonNegativeInteger(value: unknown, where: string): number {
+  if (!Number.isInteger(value) || Number(value) < 0) {
+    throw new Error(`${where} must be a non-negative integer`);
+  }
+  return Number(value);
 }
 
 function recommendationFor(tier: ContextTier): ContextRecommendation {
@@ -327,10 +347,13 @@ export function recommendContext(
     (total, item) => total + item,
     0,
   );
+  const preflightInputTokens = input.preflight_input_tokens ?? 0;
   const largest = tierAssessments.at(-1)!;
   const expectedTotal = selected
-    ? attemptedInputTokens + selected.estimated_input_tokens
-    : attemptedInputTokens;
+    ? preflightInputTokens +
+      attemptedInputTokens +
+      selected.estimated_input_tokens
+    : preflightInputTokens + attemptedInputTokens;
   const savings = selected
     ? largest.estimated_input_tokens - expectedTotal
     : null;
@@ -365,6 +388,7 @@ export function recommendContext(
     required_evidence: input.required_evidence,
     tier_assessments: tierAssessments,
     attempted_input_tokens: attemptedInputTokens,
+    preflight_input_tokens: preflightInputTokens,
     expected_total_input_tokens: expectedTotal,
     always_largest_input_tokens: largest.estimated_input_tokens,
     estimated_savings_tokens: savings,
@@ -423,4 +447,65 @@ export function renderRecommendation(
     "",
   );
   return lines.join("\n");
+}
+
+function evidenceDescriptions(
+  result: ContextRecommendationResult,
+  evidenceIds: string[],
+): string[] {
+  const descriptions = new Map(
+    result.required_evidence.map((item) => [
+      item.evidence_id,
+      item.description.replace(/[.]$/, ""),
+    ]),
+  );
+  return evidenceIds.map((id) => descriptions.get(id) ?? id);
+}
+
+export function renderCompactRecommendation(
+  result: ContextRecommendationResult,
+): string {
+  if (!result.recommended_tier) {
+    return [
+      "ContextAdapt: stop and refresh context.",
+      `Why: ${result.reasons[0] ?? "required evidence is missing or unresolved"}.`,
+      "Cost: no new model call is recommended.",
+      "Safety: do not mutate state until the missing evidence is restored.",
+      "",
+    ].join("\n");
+  }
+
+  const selectedIndex = CONTEXT_TIERS.indexOf(result.recommended_tier);
+  const smaller = result.tier_assessments
+    .slice(0, selectedIndex)
+    .filter((tier) => !tier.safe);
+  const why =
+    smaller.length === 0
+      ? `${result.recommended_tier} retains all required evidence and is the smallest safe tier.`
+      : `${smaller
+          .map((tier) => {
+            const missing = evidenceDescriptions(result, tier.missing_evidence);
+            const issues = [
+              ...missing,
+              ...evidenceDescriptions(result, tier.stale_evidence).map(
+                (item) => `stale ${item}`,
+              ),
+              ...tier.unresolved_contradictions,
+            ];
+            return `${tier.tier} loses ${issues.join("; ")}`;
+          })
+          .join(
+            "; ",
+          )}; ${result.recommended_tier} retains all required evidence.`;
+  const savings =
+    result.estimated_savings_percent === null
+      ? "savings unavailable"
+      : `${result.estimated_savings_percent}% below the 1M-window baseline`;
+  return [
+    `ContextAdapt: use ${result.recommended_tier}.`,
+    `Why: ${why}`,
+    `Cost: about ${tokens(result.expected_total_input_tokens)} input tokens, ${savings}.`,
+    `Safety: plan at ${result.recommended_tier}; the real tool call is still gated.`,
+    "",
+  ].join("\n");
 }

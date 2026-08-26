@@ -23,7 +23,16 @@
     "success": { "type": ["boolean", "null"] },
     "facts": { "type": "object" },
     "links": { "type": "object", "additionalProperties": { "type": "string" } },
-    "text": { "type": "string" }
+    "text": { "type": "string" },
+    "context_span": {
+      "type": "object",
+      "required": ["start_token", "end_token"],
+      "properties": {
+        "start_token": { "type": "integer", "minimum": 0 },
+        "end_token": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    }
   },
   "additionalProperties": true
 }

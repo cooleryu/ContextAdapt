@@ -45,6 +45,32 @@ export function parseTraceEvent(
   ) {
     throw new Error(`success must be a boolean${where}`);
   }
+  const contextSpan = value.context_span;
+  if (contextSpan !== undefined) {
+    if (!isRecord(contextSpan)) {
+      throw new Error(`context_span must be an object${where}`);
+    }
+    const unknown = Object.keys(contextSpan).filter(
+      (key) => key !== "start_token" && key !== "end_token",
+    );
+    if (unknown.length > 0) {
+      throw new Error(
+        `context_span contains unsupported field(s)${where}: ${unknown.join(", ")}`,
+      );
+    }
+    for (const key of ["start_token", "end_token"] as const) {
+      if (!Number.isInteger(contextSpan[key]) || Number(contextSpan[key]) < 0) {
+        throw new Error(
+          `context_span.${key} must be a non-negative integer${where}`,
+        );
+      }
+    }
+    if (Number(contextSpan.start_token) > Number(contextSpan.end_token)) {
+      throw new Error(
+        `context_span.start_token must not exceed end_token${where}`,
+      );
+    }
+  }
   return {
     event_id: String(value.event_id),
     source: String(value.source),
@@ -70,6 +96,14 @@ export function parseTraceEvent(
       Object.entries(links).map(([key, item]) => [String(key), String(item)]),
     ),
     text: String(value.text ?? ""),
+    ...(contextSpan === undefined
+      ? {}
+      : {
+          context_span: {
+            start_token: Number(contextSpan.start_token),
+            end_token: Number(contextSpan.end_token),
+          },
+        }),
   };
 }
 

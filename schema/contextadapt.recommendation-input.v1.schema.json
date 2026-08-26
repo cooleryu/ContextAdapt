@@ -79,6 +79,7 @@
       "maxItems": 1,
       "items": { "type": "integer", "minimum": 1 }
     },
+    "preflight_input_tokens": { "type": "integer", "minimum": 0 },
     "maximum_escalations": { "enum": [0, 1] }
   }
 }

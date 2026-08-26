@@ -16,6 +16,11 @@ export type JsonValue =
   JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
 export type Facts = Record<string, unknown>;
 
+export interface ContextSpan {
+  start_token: number;
+  end_token: number;
+}
+
 export interface TraceEvent {
   event_id: string;
   source: string;
@@ -27,6 +32,7 @@ export interface TraceEvent {
   facts: Facts;
   links: Record<string, string>;
   text: string;
+  context_span?: ContextSpan;
 }
 
 export type RiskSeverity = "critical" | "high";

@@ -116,6 +116,157 @@ export function compileExecutorGuard(
   };
 }
 
+const runtimeFields = [
+  "environment",
+  "timeout",
+  "edit_protected",
+  "target_file",
+] as const;
+const payloadBoundScalarFields = new Set(["timeout"]);
+
+/**
+ * Compile the live guard after two independent semantic recorder runs have
+ * agreed on the current user task. Unlike compileExecutorGuard, this path does
+ * not require the caller to materialize proposal/review files: the recorder
+ * attestation is already bound to the host-authored current event.
+ */
+export function compileRuntimeExecutorGuard(
+  events: TraceEvent[],
+): ExecutorGuard {
+  const tasks = events
+    .filter(
+      (event) =>
+        event.source === "user" &&
+        (event.kind === "state" || event.kind === "instruction") &&
+        typeof event.facts.target_file === "string" &&
+        event.facts.target_file.trim() !== "",
+    )
+    .sort(
+      (left, right) =>
+        (left.sequence ?? -1) - (right.sequence ?? -1) ||
+        left.event_id.localeCompare(right.event_id),
+    );
+  const current = tasks.at(-1);
+  if (!current) throw new Error("runtime guard requires a current user task");
+  if (current.facts.semantic_reviewed !== true) {
+    throw new Error(
+      "runtime guard requires a semantically reviewed current task",
+    );
+  }
+  const runIds = current.facts.semantic_run_ids;
+  if (
+    !Array.isArray(runIds) ||
+    runIds.length !== 2 ||
+    !runIds.every((item) => typeof item === "string" && item.trim() !== "") ||
+    new Set(runIds).size !== 2
+  ) {
+    throw new Error(
+      "runtime guard requires two independent semantic run identities",
+    );
+  }
+  const byId = new Map(events.map((event) => [event.event_id, event]));
+  const previousId = current.links.replaces;
+  const previous = previousId ? byId.get(previousId) : current;
+  if (!previous)
+    throw new Error(`runtime predecessor ${previousId} is missing`);
+  if (previous.entity !== current.entity) {
+    throw new Error("runtime predecessor must belong to the same task entity");
+  }
+  if (
+    previous !== current &&
+    (previous.sequence === null ||
+      current.sequence === null ||
+      previous.sequence >= current.sequence)
+  ) {
+    throw new Error("runtime predecessor chronology is invalid");
+  }
+
+  const target = String(current.facts.target_file);
+  const currentObservation = events
+    .filter(
+      (event) =>
+        event.kind === "observation" &&
+        event.success === true &&
+        event.facts.target_file === target,
+    )
+    .sort(
+      (left, right) =>
+        (left.sequence ?? -1) - (right.sequence ?? -1) ||
+        left.event_id.localeCompare(right.event_id),
+    )
+    .at(-1);
+
+  const changes: GuardChange[] = runtimeFields
+    .filter(
+      (field) =>
+        Object.hasOwn(current.facts, field) ||
+        Object.hasOwn(previous.facts, field),
+    )
+    .map((field) => ({
+      field,
+      old_value:
+        previous === current &&
+        field !== "target_file" &&
+        field !== "edit_protected" &&
+        currentObservation &&
+        Object.hasOwn(currentObservation.facts, field)
+          ? currentObservation.facts[field]
+          : Object.hasOwn(previous.facts, field)
+            ? previous.facts[field]
+            : current.facts[field],
+      current_value: current.facts[field],
+    }));
+  const protectedResources = [
+    ...new Set(
+      events
+        .filter(
+          (event) =>
+            event.source === "policy" &&
+            event.kind === "policy" &&
+            event.facts.protected === true &&
+            typeof event.facts.resource === "string",
+        )
+        .map((event) => String(event.facts.resource)),
+    ),
+  ].sort();
+  if (
+    protectedResources.includes(target) &&
+    current.facts.edit_protected !== true &&
+    !changes.some((change) => change.field === "edit_protected")
+  ) {
+    changes.push({
+      field: "edit_protected",
+      old_value: true,
+      current_value: false,
+    });
+  }
+  if (changes.length === 0) {
+    throw new Error("runtime guard has no assessable current fields");
+  }
+  const digest = canonicalDigest({
+    current_event_id: current.event_id,
+    semantic_run_ids: runIds,
+    changes,
+    protected_resources: protectedResources,
+  });
+  return {
+    schema_version: GUARD_SCHEMA_VERSION,
+    guard_id: `guard:${digest.slice(0, 16)}`,
+    relation_sha256: digest,
+    entity: current.entity,
+    older_event_id: previous.event_id,
+    current_event_id: current.event_id,
+    changes,
+    protected_resources: protectedResources,
+    scope: {
+      codex_tools: [...mutatingTools.codex].sort(),
+      omp_tools: [...mutatingTools.omp].sort(),
+    },
+    boundary:
+      "Live guard compiled from two independently reviewed semantic task captures and host policy.",
+  };
+}
+
 export async function loadExecutorGuard(path: string): Promise<ExecutorGuard> {
   const value: unknown = JSON.parse(await readFile(path, "utf8"));
   if (!isRecord(value) || value.schema_version !== GUARD_SCHEMA_VERSION) {
@@ -306,6 +457,14 @@ export function evaluateExecutorCall(
       );
       matchedChanges.push("target_file");
     }
+    for (const target of view.targets) {
+      if (target !== currentTarget) {
+        reasons.push(
+          `tool targets unreviewed path ${JSON.stringify(target)}; current reviewed path is ${JSON.stringify(currentTarget)}`,
+        );
+        matchedChanges.push("target_file");
+      }
+    }
   }
   const protectedResources = new Set(
     guard.protected_resources.map((path) => canonicalTarget(path)),
@@ -330,12 +489,24 @@ export function evaluateExecutorCall(
     )
       continue;
     if (change.old_value === change.current_value) continue;
+    const usesCurrent = valuePattern(field, change.current_value).test(
+      view.content,
+    );
     if (
       valuePattern(field, change.old_value).test(view.content) &&
-      !valuePattern(field, change.current_value).test(view.content)
+      !usesCurrent
     ) {
       reasons.push(
         `tool arguments use stale ${field}=${JSON.stringify(change.old_value)}; current reviewed value is ${JSON.stringify(change.current_value)}`,
+      );
+      matchedChanges.push(field);
+    } else if (
+      payloadBoundScalarFields.has(field) &&
+      ["write", "edit"].includes(view.tool_name) &&
+      !usesCurrent
+    ) {
+      reasons.push(
+        `tool arguments do not bind reviewed current ${field}=${JSON.stringify(change.current_value)}`,
       );
       matchedChanges.push(field);
     }

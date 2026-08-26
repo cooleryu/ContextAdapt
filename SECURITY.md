@@ -21,6 +21,13 @@ remove unrelated content before submitting the private report.
   conversations, or proprietary traces.
 - Adapters should redact sensitive fields before serializing
   `contextadapt.trace.v1`.
+- Automatic tier recommendation trusts only host-produced `context:profile`
+  metadata and full-event `context_span` measurements. Keep those records out
+  of planner control. ContextAdapt validates their shape and source label but
+  cannot cryptographically authenticate a JSONL file supplied by an attacker.
+- A context profile must explicitly use the supported suffix-window policy and
+  allowlist observation-producing tool sources. Planner, user, policy, and host
+  events cannot be allowlisted as successful tool observations.
 - The Codex adapter redacts raw identifiers, prompts, messages, commands,
   outputs, errors, and tool payloads by default. Its SHA-256 fingerprints can
   still reveal short or guessable values through offline guessing; they are for
@@ -34,6 +41,16 @@ remove unrelated content before submitting the private report.
   the selected events before consenting.
 - `analyze-codex --output-dir` stores proposal and review artifacts containing
   verbatim evidence quotes. Treat that directory as sensitive trace data.
+- `run-codex --allow-remote-content` sends the new task to two independent
+  Luna recorder calls and then sends the selected history to the task Agent.
+  Its local session and `.contextadapt/runtime` files may contain raw prompts,
+  target-file contents, and tool-status fingerprints. Do not commit or publish
+  those files without review.
+- The OMP extension performs a read-only preflight of an in-workspace target up
+  to 1 MB and may inject that content into model-visible context. Paths outside
+  the workspace fail closed. Sensitive paths are classified by host rules, not
+  by the task Agent; projects with additional protected resources should add
+  host-level policy before relying on the first default rule set.
 - Executor hooks receive the Agent's actual tool arguments. Keep guard files
   and hook commands under host control, use absolute paths where practical,
   and do not log raw patches or commands unless the destination is approved for

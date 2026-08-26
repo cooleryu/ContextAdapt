@@ -9,6 +9,23 @@ dist/
 .coverage
 .pytest_cache/
 .venv/
+.contextadapt/
+.contextadapt-research/
+# Private research workbench. Public releases contain product code, tests, and
+# reviewed documentation, not local run outputs or internal experiment drivers.
+/artifacts/
+/experiments/passive-natural-cohort/
+/experiments/product-value/
+/experiments/real-session-shadow/
+/scripts/codex_adaptive_lab.ts
+/scripts/codex_recovery_live_lab.ts
+/scripts/omp_adaptive_lab.ts
+/scripts/omp_installed_p0_acceptance.ts
+/scripts/omp_recovery_lab.ts
+/scripts/paper_bridge_luna_pilot.ts
+/tests/product-value.test.ts
+/docs/omp-user-p0-results.md
+/docs/paper-bridge-pilot-results.md
 build/
 dist/
 *.whl

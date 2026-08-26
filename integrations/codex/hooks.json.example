@@ -1,15 +1,41 @@
 {
-  "description": "ContextAdapt pre-execution file and shell guard",
+  "description": "ContextAdapt task/tool recorder and pre-execution guard",
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "contextadapt host-hook codex",
+            "timeout": 30,
+            "statusMessage": "ContextAdapt is recording the task update"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "contextadapt executor-hook codex --policy .contextadapt/executor-guard.json --format native",
+            "command": "contextadapt host-hook codex",
             "timeout": 30,
-            "statusMessage": "ContextAdapt is checking current context"
+            "statusMessage": "ContextAdapt is checking the actual tool call"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "contextadapt host-hook codex",
+            "timeout": 30,
+            "statusMessage": "ContextAdapt is recording tool success"
           }
         ]
       }

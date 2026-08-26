@@ -52,8 +52,8 @@ const extensionPath = resolve(
 );
 if (!existsSync(extensionPath))
   throw new Error(`missing extension: ${extensionPath}`);
-const guardExtension = (await import(pathToFileURL(extensionPath).href))
-  .default;
+const { createOmpExtension } = await import(pathToFileURL(extensionPath).href);
+const guardExtension = createOmpExtension({ guardOnly: true });
 
 type LabCase = {
   name: string;
