@@ -1,7 +1,7 @@
 {
   "name": "contextadapt",
   "version": "0.2.0",
-  "description": "Help AI agents use the smallest context that can still act safely.",
+  "description": "Help every Agent use the smallest context that can still act safely.",
   "license": "Apache-2.0",
   "type": "module",
   "repository": {
