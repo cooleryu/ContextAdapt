@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>cooleryu — AI Agent Reliability Field Notes</title>
+  <meta name="description" content="Open research notes on context management, reproducible agent failures, and execution-time verification. Building ContextAdapt.">
+  <meta name="author" content="cooleryu">
+  <meta name="theme-color" content="#f3ecd9">
+  <link rel="canonical" href="https://cooleryu.github.io/ContextAdapt/">
+  <link rel="alternate" type="application/rss+xml" title="cooleryu Field Notes" href="https://cooleryu.github.io/ContextAdapt/feed.xml">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="cooleryu — AI Agent Reliability Field Notes">
+  <meta property="og:description" content="Open research notes on context management, reproducible agent failures, and execution-time verification. Building ContextAdapt.">
+  <meta property="og:url" content="https://cooleryu.github.io/ContextAdapt/">
+  <meta property="og:image" content="https://cooleryu.github.io/ContextAdapt/assets/cooleryu-open-source.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="420">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="cooleryu — AI Agent Reliability Field Notes">
+  <meta name="twitter:description" content="Open research notes on context management, reproducible agent failures, and execution-time verification. Building ContextAdapt.">
+  <meta name="twitter:image" content="https://cooleryu.github.io/ContextAdapt/assets/cooleryu-open-source.png">
+  <link rel="stylesheet" href="assets/site.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"cooleryu Field Notes","url":"https://cooleryu.github.io/ContextAdapt/","inLanguage":"en"},{"@type":"Person","name":"cooleryu","url":"https://github.com/cooleryu","knowsAbout":["AI agent reliability","context management","tool calling","observability"]},{"@type":"SoftwareSourceCode","name":"ContextAdapt","description":"Help every Agent use the smallest context that can still act safely.","codeRepository":"https://github.com/cooleryu/ContextAdapt","programmingLanguage":"TypeScript","license":"https://www.apache.org/licenses/LICENSE-2.0"}]}</script>
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header">
+    <a class="brand" href="./"><strong>cooleryu</strong><span>Field Notes</span></a>
+    <nav class="site-nav" aria-label="Primary">
+      <a href="./#writing">Writing</a>
+      <a href="evidence/">Evidence</a>
+      <a href="https://github.com/cooleryu/ContextAdapt">GitHub ↗</a>
+    </nav>
+  </header>
+  <main id="content">
+    <section class="hero"><div class="hero-inner">
+      <div><p class="eyebrow">Open source · AI agent reliability · MMXXVI</p><h1>Make the context <em>answerable.</em></h1><p class="hero-deck">I study the moment an AI agent turns context into action: what evidence survived, what it actually used, and whether that evidence is still current before a tool touches the world.</p><div class="hero-actions"><a class="button" href="articles/how-much-code-context-does-an-ai-agent-need/">Read the first note</a><a class="button secondary" href="https://github.com/cooleryu/ContextAdapt">Explore ContextAdapt ↗</a></div></div>
+      <aside class="edition-card"><span class="number">01</span><p>One claim. One frozen protocol. One evidence boundary the reader can inspect.</p></aside>
+    </div></section>
+    <section class="section"><p class="section-label">Position</p><div class="manifesto-grid"><div><h2>Long context is a capacity. Reliability is a chain of evidence.</h2></div><div class="manifesto-copy"><p>ContextAdapt is an open-source project for identifying smaller context candidates without silently discarding action-critical evidence—and for checking goal, permission, and provenance again before execution.</p><div class="principles"><div class="principle"><b>I</b><span>Preserve exact evidence before summarizing it.</span></div><div class="principle"><b>II</b><span>Separate what entered the context from what the agent verified.</span></div><div class="principle"><b>III</b><span>Let experiments shrink the claim, not decorate it.</span></div></div></div></div></section>
+    <section class="section" id="writing"><p class="section-label">Latest field note</p><div class="feature-article"><div class="result-panel"><small>Held-out result</small><p class="metric">+22.4</p><p>percentage points over head-and-tail truncation in strict code-evidence retention.</p><p><small>95% CI · +2.4 to +40.6</small></p></div><div class="article-copy"><h2>How Much Code Context Does an AI Agent Need?</h2><div class="meta-row"><span class="tag">2,160 cells</span><span class="tag">30 holdout tasks</span><span class="tag">12 repositories</span></div><p>Can a coding agent use less context without losing the evidence needed to act? This note reports a controlled retention result, the baselines that remained competitive, and the eight tasks that still required full source.</p><a class="button" href="articles/how-much-code-context-does-an-ai-agent-need/">Read the evidence →</a></div></div></section>
+  </main>
+  <footer class="site-footer"><div class="footer-inner">
+    <div><p><strong>Evidence before claims.</strong></p><p class="footer-note">AI agent reliability · context management · execution-time verification</p></div>
+    <p><a href="https://github.com/cooleryu/ContextAdapt">ContextAdapt</a> · <a href="feed.xml">RSS</a></p>
+  </div></footer>
+</body>
+</html>

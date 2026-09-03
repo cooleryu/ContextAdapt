@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>P0 Result Ledger — ContextAdapt</title>
+  <meta name="description" content="Full executed ledger for ContextAdapt's verification-allocation and exact-span real-code retention experiment.">
+  <meta name="author" content="cooleryu">
+  <meta name="theme-color" content="#f3ecd9">
+  <link rel="canonical" href="https://cooleryu.github.io/ContextAdapt/evidence/p0-results/">
+  <link rel="alternate" type="application/rss+xml" title="cooleryu Field Notes" href="https://cooleryu.github.io/ContextAdapt/feed.xml">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="P0 Result Ledger — ContextAdapt">
+  <meta property="og:description" content="Full executed ledger for ContextAdapt's verification-allocation and exact-span real-code retention experiment.">
+  <meta property="og:url" content="https://cooleryu.github.io/ContextAdapt/evidence/p0-results/">
+  <meta property="og:image" content="https://cooleryu.github.io/ContextAdapt/assets/cooleryu-open-source.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="420">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="P0 Result Ledger — ContextAdapt">
+  <meta name="twitter:description" content="Full executed ledger for ContextAdapt's verification-allocation and exact-span real-code retention experiment.">
+  <meta name="twitter:image" content="https://cooleryu.github.io/ContextAdapt/assets/cooleryu-open-source.png">
+  <link rel="stylesheet" href="../../assets/site.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Dataset","name":"ContextAdapt P0 result ledger","datePublished":"2026-09-02","creator":{"@type":"Person","name":"cooleryu"},"url":"https://cooleryu.github.io/ContextAdapt/evidence/p0-results/"}</script>
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header">
+    <a class="brand" href="../../"><strong>cooleryu</strong><span>Field Notes</span></a>
+    <nav class="site-nav" aria-label="Primary">
+      <a href="../../#writing">Writing</a>
+      <a href="../../evidence/">Evidence</a>
+      <a href="https://github.com/cooleryu/ContextAdapt">GitHub ↗</a>
+    </nav>
+  </header><main id="content"><section class="article-hero"><div class="article-hero-inner"><div><p class="eyebrow">Executed ledger · preserved verbatim</p><h1>P0 result ledger.</h1><p class="article-subtitle">The detailed results, ablations, checks, and evidence boundary behind the public research note.</p></div></div></section><div class="article-layout"><aside class="toc"><strong>Source</strong><ol><li><a href="../p0-results.md">Raw Markdown</a></li><li><a href="../protocol-v3.json">Frozen protocol</a></li><li><a href="../">Evidence index</a></li></ol></aside><article class="prose"><h1 id="p0-verification-and-rendering-evidence-ledger">P0 verification and rendering evidence ledger</h1>
+<p>Frozen on 2026-09-02. These results intentionally separate three different questions: whether the engineering pipeline is internally coherent, whether an external paper's phenomenon can be reproduced from its locked data, whether a frozen ContextAdapt renderer retains real edit evidence, and whether that retention becomes real Agent success. The first three now have evidence. The fourth remains unearned.</p>
+<h2 id="1-contextadapt-engineering-matrix">1. ContextAdapt engineering matrix</h2>
+<p>Command: <code>npm run experiment:p0-engineering</code></p>
+<p>Evidence label: <code>PIPELINE_VALIDATED</code> Model calls: <code>0</code> Cells: <code>320</code></p>
+<p>At the first sufficient synthetic verification budget, ContextAdapt's risk-allocated policy covered all 18 critical paths and failed closed whenever the smaller budget was insufficient. Same-budget recency and uniform baselines were deliberately not given those oracle labels.</p>
+<div class="table-wrap"><table><thead><tr><th>Policy at budget 2</th><th>Critical-path recall</th><th>Projected unsafe proceeds</th><th>Mean estimated verification input</th></tr></thead><tbody><tr><td>risk allocated</td><td>18/18</td><td>0</td><td>355.75</td></tr><tr><td>recency</td><td>0/18</td><td>12</td><td>418.25</td></tr><tr><td>seeded uniform</td><td>12/18</td><td>6</td><td>390.25</td></tr><tr><td>verify all (cost upper bound)</td><td>18/18</td><td>0</td><td>1,055.38</td></tr></tbody></table></div>
+<p>The exact-span coverage gate passed all 48 rendering cells. The numbers below use a character-divided-by-four estimate, not a tokenizer or provider bill.</p>
+<div class="table-wrap"><table><thead><tr><th>Renderer</th><th>Required-span coverage</th><th>Mean rendered/original estimate</th><th>Mean rendered estimate</th></tr></thead><tbody><tr><td>raw</td><td>16/16</td><td>1.0000</td><td>1,124.375</td></tr><tr><td>extractive</td><td>16/16</td><td>0.2270</td><td>291.500</td></tr><tr><td>intent-conditioned extractive</td><td>16/16</td><td>0.2485</td><td>316.875</td></tr></tbody></table></div>
+<p>Interpretation: this validates generation, allocation, target binding, fail-closed behavior, exact-span preservation, recovery handles, scoring, and artifact determinism. Because the scenarios and oracle are synthetic, these differences are not model behavior and are not a product-savings claim.</p>
+<h2 id="2-stale-constraints-v3-reproduction">2. Stale Constraints v3 reproduction</h2>
+<p>Command: <code>npm run experiment:p0-stale-reproduction</code></p>
+<p>Evidence label: <code>PAPER_DATA_REPRODUCED</code> New model calls: <code>0</code> Source: _When Stale Constraints Go Unchecked_, v3, DOI <code>10.5281/zenodo.22147784</code>, CC BY 4.0.</p>
+<p>The command verifies the official archive SHA-256, rehashes all 14,370 package manifest entries, recomputes Study A from raw answers, reruns the frozen A/B/X/C analysis scripts, and requires every output to match the archived bytes.</p>
+<p>Selected reproduced findings:</p>
+<div class="table-wrap"><table><thead><tr><th>Experiment</th><th>Locked episodes</th><th>Reproduced result</th></tr></thead><tbody><tr><td>A</td><td>900</td><td>forced-critical minus native authoritative consistency: +80.7 pp, 95% CI [74.0, 86.7]</td></tr><tr><td>B</td><td>600</td><td>merely showing freshness: target-selection delta -4.0 pp, 95% CI [-11.3, 3.3], inconclusive</td></tr><tr><td>X</td><td>1,498 plus 2 error files</td><td>forced-critical minus native: +62.0 pp, 95% CI [57.2, 66.8]</td></tr><tr><td>C</td><td>5,400</td><td>native critical-record selection rose from 5.3% at budget 1 to 88.7% at budget 4</td></tr><tr><td>C, target-blind rule</td><td>5,400</td><td>at budget 2, selection +89.7 pp and outcome +89.3 pp versus P0</td></tr></tbody></table></div>
+<p>Interpretation: the external data establishes that scarce verification allocation can cause large stale-constraint failures, and that a deterministic target-blind selection rule can redirect attention. Experiment B is especially important: passive freshness presentation alone did not solve the problem. This is the reason ContextAdapt now combines risk allocation with an execution gate. The paper did not run ContextAdapt, so none of these numbers are a ContextAdapt improvement result.</p>
+<h2 id="3-independent-frozen-luna-reanalysis">3. Independent frozen-Luna reanalysis</h2>
+<p>Command: <code>npm run experiment:p0-stale-luna</code></p>
+<p>Evidence label: <code>EXTERNAL_MODEL_BEHAVIOR_REANALYZED</code> New model calls: <code>0</code> Frozen model in the source episodes: <code>gpt-5.6-luna</code> Raw episodes: <code>900</code>; independent completed provider calls: <code>1,750</code></p>
+<p>This analysis ignores the stored score block and recomputes selection and current-consistent outcome from raw <code>resolved_ids</code> and <code>answer_t2</code>. It verifies unique provider identities and same-world prompt equality, then bootstraps the 25 run superblocks 10,000 times.</p>
+<div class="table-wrap"><table><thead><tr><th>Luna intervention</th><th>Budget</th><th>Selection delta</th><th>Current-consistent outcome delta</th><th>Added estimated input</th></tr></thead><tbody><tr><td>target-blind constraint rule versus native</td><td>1</td><td>+46 pp [30, 62]</td><td>+44 pp [24, 64]</td><td>+104.4 tokens</td></tr><tr><td>target-blind constraint rule versus native</td><td>2</td><td>+96 pp [90,100]</td><td>+92 pp [80,100]</td><td>+128.2 tokens</td></tr><tr><td>forced critical versus native</td><td>3</td><td>—</td><td>+72 pp [52, 88]</td><td>—</td></tr><tr><td>forced critical versus native</td><td>4</td><td>—</td><td>+28 pp [12, 48]</td><td>—</td></tr></tbody></table></div>
+<p>Dates-only and oldest-first negative controls did not reproduce the gain. The important result is not “Luna is good” or “Luna is bad”: for this frozen model, the main failure was allocation of attention to the right evidence, not simple access to more memory. This is still an external-paper intervention, not a ContextAdapt product trial.</p>
+<h2 id="4-real-code-renderer-development-and-held-out-evaluation">4. Real-code renderer development and held-out evaluation</h2>
+<p>Commands:</p>
+<pre><code class="language-bash">npm run experiment:p0-real-code:dev
+npm run experiment:p0-real-code:holdout</code></pre>
+<p>Evidence label: <code>REAL_CODE_RETENTION_HOLDOUT</code> New model calls: <code>0</code> Development: <code>23 tasks × 9 policies × 8 budgets = 1,656 cells</code> Held out: <code>30 tasks × 9 policies × 8 budgets = 2,160 cells</code></p>
+<p>The 30 held-out tasks span 12 repositories. The renderer sees only the issue and base-commit source; the gold patch is evaluator-only. The renderer, evaluator, split, source manifest, metrics, thresholds, and 10,000-draw repository-cluster bootstrap were fingerprinted in <code>protocol-v3.json</code> before the single held-out run.</p>
+<p>The strict metric requires all three conditions: stay inside the source budget, preserve every exact issue line found in source, and retain at least one pre-edit line from every gold patch hunk.</p>
+<div class="table-wrap"><table><thead><tr><th>Held-out source budget</th><th>ContextAdapt v3 strict</th><th>Lexical strict</th><th>Head/tail strict</th><th>ContextAdapt hunk coverage</th><th>All-in estimated ratio</th></tr></thead><tbody><tr><td>10%</td><td>10/30 (33%)</td><td>6/30 (20%)</td><td>4/30 (13%)</td><td>41.7%</td><td>14.9%</td></tr><tr><td>20%</td><td>12/30 (40%)</td><td>10/30 (33%)</td><td>8/30 (27%)</td><td>50.0%</td><td>24.4%</td></tr><tr><td>40%</td><td>18/30 (60%)</td><td>18/30 (60%)</td><td>10/30 (33%)</td><td>67.8%</td><td>43.2%</td></tr><tr><td>60%</td><td>22/30 (73%)</td><td>20/30 (67%)</td><td>12/30 (40%)</td><td>85.0%</td><td>62.2%</td></tr><tr><td>100%</td><td>30/30 (100%)</td><td>30/30 (100%)</td><td>30/30 (100%)</td><td>100.0%</td><td>100.0%</td></tr></tbody></table></div>
+<p>Across the seven compressed budgets, ContextAdapt v3 improved strict retention over head/tail by <strong>+22.4 percentage points</strong>, repository-cluster bootstrap 95% CI <strong>[+2.4, +40.6]</strong>. Against lexical intent, the gain was only <strong>+7.1 points</strong>, 95% CI <strong>[-2.3, +17.9]</strong>: directionally positive but inconclusive. At the 40% checkpoint, ContextAdapt and lexical intent tied at 18/30, while v2 was 19/30. The development-set advantage therefore did not generalize cleanly.</p>
+<p>The ablations sharpen the conclusion:</p>
+<ul><li>exact issue-evidence gating improved the compressed-curve strict metric over</li></ul>
+<p>ungated structural retrieval by +6.2 points, 95% CI [+1.1, +11.9], while edit hunk coverage was unchanged;</p>
+<ul><li>structural ranking versus ContextAdapt v2 was +4.3 points, 95% CI</li></ul>
+<p>[-4.6, +15.3], so its incremental held-out value is not established;</p>
+<ul><li>the evaluator-only anchor oracle exceeded ContextAdapt v3 by +42.9 points,</li></ul>
+<p>95% CI [+29.8, +55.8], exposing large remaining location headroom.</p>
+<p>All 840 held-out monotonicity checks passed: a larger ContextAdapt budget never lost a previously retained anchor, hunk, issue line, or strict success. All 480 oracle-isolation checks passed, and there were zero delivered over-budget or missing-exact-evidence cells. An adversarial same-file traceback caused one held-out regression at 40% (and one offsetting improvement), confirming that untrusted location hints still need provenance-aware weighting.</p>
+<p>The source ratio is not the whole bill. The fixed issue text was excluded from source allocation but included in the reported all-in estimate. All token numbers are characters divided by four, not provider tokenizer usage.</p>
+<h2 id="5-the-deep-conclusion">5. The deep conclusion</h2>
+<p>This experiment falsified the tempting strong story that “preserving the user request plus a clever structural slice is enough to know the shortest safe context.” It is not. ContextAdapt can now guarantee exact-evidence preservation, budget compliance, deterministic recovery, and monotonic escalation. It can also beat naive truncation on real code. But on the held-out set, 8 of 30 tasks still needed the full source before every gold hunk was retained, and the renderer itself could not know which eight without evaluator-only information.</p>
+<p>That creates a clean separation:</p>
+<ol><li><strong>Proven now:</strong> ContextAdapt can build a safer, auditable context candidate</li></ol>
+<p>and substantially outperform position-only truncation.</p>
+<ol><li><strong>Not proven:</strong> the candidate is the shortest context that lets an Agent</li></ol>
+<p>finish the task.</p>
+<ol><li><strong>Required next:</strong> send the candidate to a real task Agent, run the real</li></ol>
+<p>verifier, escalate on failure, and count the failed attempt, recovery, reviewer, and larger-context retry. Only that closed loop can turn retention into a user-facing 200K/400K/1M recommendation.</p>
+<h2 id="6-product-claim-still-pending">6. Product claim still pending</h2>
+<p>The external coding-task layer has now been executed, but only as a within-file retention benchmark. The gold-touched file is preselected, so repository search is not tested. No Paritok model or task-Agent call was made.</p>
+<p><code>IMPROVED</code> remains unearned. It requires blinded, paired runs of the same Agent, task, Host state, and verifier across:</p>
+<ol><li>always-largest + raw + verify-all;</li><li>always-small + raw + native verification;</li><li>ContextAdapt tier selection only;</li><li>ContextAdapt tier + exact renderer + risk allocation + execution gate.</li></ol>
+<p>The primary acceptance target is not maximum compression. It is equal safety and completion versus the largest-context baseline at lower all-in cost, including review, verification, recovery, retries, and failed attempts.</p></article></div></main><footer class="site-footer"><div class="footer-inner">
+    <div><p><strong>Evidence before claims.</strong></p><p class="footer-note">AI agent reliability · context management · execution-time verification</p></div>
+    <p><a href="https://github.com/cooleryu/ContextAdapt">ContextAdapt</a> · <a href="../../feed.xml">RSS</a></p>
+  </div></footer>
+</body>
+</html>

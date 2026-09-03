@@ -1,0 +1,18 @@
+# cooleryu Field Notes
+
+Research notes on AI agent reliability, context management, and execution-time verification.
+
+## Primary project
+- ContextAdapt: https://github.com/cooleryu/ContextAdapt
+- Description: Help every Agent use the smallest context that can still act safely.
+
+## Published article
+- How Much Code Context Does an AI Agent Need?: https://cooleryu.github.io/ContextAdapt/articles/how-much-code-context-does-an-ai-agent-need/
+- Evidence level: REAL_CODE_RETENTION_HOLDOUT
+- Direct result: +22.4 percentage points over head-and-tail truncation in strict held-out code-evidence retention.
+- Boundary: this is not yet an end-to-end task-success, shortest-safe-tier, or provider-cost claim.
+
+## Evidence
+- Package: https://cooleryu.github.io/ContextAdapt/evidence/
+- Result ledger: https://cooleryu.github.io/ContextAdapt/evidence/p0-results/
+- Frozen protocol: https://cooleryu.github.io/ContextAdapt/evidence/protocol-v3.json

@@ -1,0 +1,3 @@
+# Preserve the executed Markdown ledger byte-for-byte. Its two trailing spaces
+# are intentional Markdown line breaks copied from the frozen evidence source.
+evidence/p0-results.md whitespace=-trailing-space

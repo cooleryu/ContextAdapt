@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How Much Code Context Does an AI Agent Need? — cooleryu</title>
+  <meta name="description" content="A controlled study of whether smaller, structured code contexts retain action-critical evidence better than naive truncation—and what that still does not prove.">
+  <meta name="author" content="cooleryu">
+  <meta name="theme-color" content="#f3ecd9">
+  <link rel="canonical" href="https://cooleryu.github.io/ContextAdapt/articles/how-much-code-context-does-an-ai-agent-need/">
+  <link rel="alternate" type="application/rss+xml" title="cooleryu Field Notes" href="https://cooleryu.github.io/ContextAdapt/feed.xml">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="How Much Code Context Does an AI Agent Need? — cooleryu">
+  <meta property="og:description" content="A controlled study of whether smaller, structured code contexts retain action-critical evidence better than naive truncation—and what that still does not prove.">
+  <meta property="og:url" content="https://cooleryu.github.io/ContextAdapt/articles/how-much-code-context-does-an-ai-agent-need/">
+  <meta property="og:image" content="https://cooleryu.github.io/ContextAdapt/assets/cooleryu-open-source.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="420">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="How Much Code Context Does an AI Agent Need? — cooleryu">
+  <meta name="twitter:description" content="A controlled study of whether smaller, structured code contexts retain action-critical evidence better than naive truncation—and what that still does not prove.">
+  <meta name="twitter:image" content="https://cooleryu.github.io/ContextAdapt/assets/cooleryu-open-source.png">
+  <link rel="stylesheet" href="../../assets/site.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"How Much Code Context Does an AI Agent Need?","alternativeHeadline":"Evidence from 2,160 held-out evaluations","description":"A controlled study of whether smaller, structured code contexts retain action-critical evidence better than naive truncation—and what that still does not prove.","datePublished":"2026-09-02","dateModified":"2026-09-03","inLanguage":"en","mainEntityOfPage":"https://cooleryu.github.io/ContextAdapt/articles/how-much-code-context-does-an-ai-agent-need/","author":{"@type":"Person","name":"cooleryu","url":"https://github.com/cooleryu"},"publisher":{"@type":"Person","name":"cooleryu","url":"https://github.com/cooleryu"},"about":{"@type":"SoftwareSourceCode","name":"ContextAdapt","codeRepository":"https://github.com/cooleryu/ContextAdapt","programmingLanguage":"TypeScript"}}</script>
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header">
+    <a class="brand" href="../../"><strong>cooleryu</strong><span>Field Notes</span></a>
+    <nav class="site-nav" aria-label="Primary">
+      <a href="../../#writing">Writing</a>
+      <a href="../../evidence/">Evidence</a>
+      <a href="https://github.com/cooleryu/ContextAdapt">GitHub ↗</a>
+    </nav>
+  </header>
+  <main id="content">
+    <section class="article-hero"><div class="article-hero-inner">
+      <div><p class="eyebrow">ContextAdapt Research Note · 001</p><h1>How Much Code Context Does an AI Agent Need?</h1><p class="article-subtitle">Evidence from 2,160 held-out evaluations</p><div class="article-meta"><span>2026-09-02</span><span>By cooleryu</span><span>English edition</span></div></div>
+      <aside class="claim-card"><strong>Evidence level</strong><code>REAL_CODE_RETENTION_HOLDOUT</code><p>Evidence retention on held-out real code. Not yet a task-success or cost-reduction claim.</p></aside>
+    </div></section>
+    <div class="article-layout">
+      <aside class="toc" aria-label="Table of contents"><strong>On this page</strong><ol><li><a href="#the-question-we-originally-made-too-simple">01 · The question we originally made too simple</a></li><li><a href="#four-papers-changed-four-parts-of-the-design">02 · Four papers changed four parts of the design</a></li><li><a href="#how-we-avoided-designing-the-test-after-seeing-the-answers">03 · How we avoided designing the test after seeing the answers</a></li><li><a href="#what-counted-as-a-strict-pass">04 · What counted as a strict pass</a></li><li><a href="#results-better-than-positional-truncation-not-magic">05 · Results: better than positional truncation, not magic</a></li><li><a href="#checks-designed-to-make-a-flattering-result-harder">06 · Checks designed to make a flattering result harder</a></li><li><a href="#what-this-experiment-falsified">07 · What this experiment falsified</a></li><li><a href="#what-the-user-facing-product-should-eventually-say">08 · What the user-facing product should eventually say</a></li><li><a href="#four-explicit-limits">09 · Four explicit limits</a></li><li><a href="#the-most-useful-result-was-not-the-largest-number">10 · The most useful result was not the largest number</a></li><li><a href="#reproduce-challenge-or-extend-the-work">11 · Reproduce, challenge, or extend the work</a></li></ol></aside>
+      <article class="prose"><h1 id="how-much-code-context-does-an-ai-agent-need">How Much Code Context Does an AI Agent Need?</h1>
+<blockquote>Evidence from 2,160 held-out evaluations</blockquote>
+<p>When people discuss long context, the first question is usually whether a model can accept 200K, 400K, or even one million tokens.</p>
+<p>For an agent that edits code and calls tools, that may not be the question that matters most.</p>
+<p>The practical question is this:</p>
+<blockquote><strong>Does this task actually need 200K, 400K, or something close to one million tokens? Can an agent work from a smaller context without losing the evidence that could change—or veto—its next action?</strong></blockquote>
+<p>That is the product question behind <a href="https://github.com/cooleryu/ContextAdapt">ContextAdapt</a>. It is not another attempt to create a larger context window. It is an attempt to identify the smallest defensible context candidate for a task, preserve the evidence that matters, and check that evidence again before execution.</p>
+<p>This article reports our first strict held-out evaluation of the context-construction part of that idea.</p>
+<p>The result is promising but deliberately narrow: across seven compressed source budgets, ContextAdapt improved strict evidence retention by <strong>22.4 percentage points</strong> over head-and-tail truncation. It did <strong>not</strong> establish that an agent completed more tasks, found the universally shortest safe context, or reduced a real provider bill.</p>
+<p>That distinction is the point of the work.</p>
+<h2 id="the-question-we-originally-made-too-simple">The question we originally made too simple</h2>
+<p>Our first intuition was attractive: preserve the user request, file paths, exact values, and a few critical code spans; compress everything else; then declare the smallest passing candidate the “shortest safe context.”</p>
+<p>Only half of that intuition survived contact with the evidence.</p>
+<p>Short contexts can clearly fail through omission. A recent goal can be truncated. <code>timeout=60</code> can become a vague summary. A revoked write permission can disappear. But a large context is not automatically safe either. An agent may have access to the new evidence and still spend its limited verification effort elsewhere. It may continue organizing an apparently coherent action around an old goal, an old file state, or an old permission.</p>
+<p>So “is the context sufficient?” is actually three different questions:</p>
+<ol><li>Did the critical evidence enter the context?</li><li>Did the agent inspect and use that evidence correctly?</li><li>Did the eventual tool call remain consistent with the current evidence?</li></ol>
+<p>This experiment measures the first question. It creates the foundation for testing the second and third, but it does not silently claim them.</p>
+<h2 id="four-papers-changed-four-parts-of-the-design">Four papers changed four parts of the design</h2>
+<p>We did not add recent paper titles to a README after the experiment. Each of these papers changed a concrete constraint in the protocol.</p>
+<ul><li><a href="https://arxiv.org/abs/2608.25553v3">When Stale Constraints Go Unchecked</a> pushed us to separate evidence being accessible from evidence actually being verified under a limited budget. That led to explicit risk ranking and an execution gate, rather than merely displaying the freshest record.</li><li><a href="https://arxiv.org/abs/2608.24188v1">Paritok-4B</a> made a simple comparison between 200K, 400K, and one million tokens look insufficient. Within the same budget, we also need to compare how policies preserve verbatim code, edit anchors, and exact values.</li><li><a href="https://arxiv.org/abs/2608.25593v1">JIT-Agent</a> reinforced the need to freeze everything outside the context policy. If memory, planning, tools, and the action protocol all change together, any improvement becomes impossible to attribute.</li><li><a href="https://arxiv.org/abs/2608.26530v1">PILOT in the Loop</a> made the cost boundary explicit. Observation, recovery, retries, and verification must be counted separately. A supervisor that consumes all the savings cannot be hidden inside “system overhead.”</li></ul>
+<p>The resulting principle was simple: change the context policy, freeze the rest, and label the evidence at the level the experiment actually supports.</p>
+<h2 id="how-we-avoided-designing-the-test-after-seeing-the-answers">How we avoided designing the test after seeing the answers</h2>
+<p>The evaluation had two layers.</p>
+<p>First, we reanalyzed 900 frozen Luna trajectories. We ignored the labels already stored in the dataset and recomputed outcomes from the records the model selected and the answers it produced. This showed an external failure pattern: for the same model, the problem was sometimes not missing memory but scarce verification attention being allocated away from the evidence most capable of vetoing an action.</p>
+<p>That reanalysis was not counted as a ContextAdapt product win.</p>
+<p>The second layer moved to real code. We used <strong>23 development tasks</strong> to repair the method. We then froze the renderer, evaluator, data split, source-file inventory, metrics, thresholds, and statistical procedure before running the <strong>30-task holdout once</strong>.</p>
+<p>Those 30 tasks came from 12 repositories. We compared nine context policies at eight source budgets, producing <strong>2,160 held-out evaluation cells</strong>.</p>
+<p>The critical isolation rule was this:</p>
+<blockquote>The renderer could see the issue and the baseline source tree. Only the evaluator could see the gold patch.</blockquote>
+<p>ContextAdapt therefore could not inspect the answer and then pretend it had discovered the relevant code independently.</p>
+<h2 id="what-counted-as-a-strict-pass">What counted as a strict pass</h2>
+<p>We used a stricter criterion than “the keyword still appears.” A candidate context had to satisfy all three conditions:</p>
+<ul><li>stay within its allocated source budget;</li><li>preserve every issue line that could be matched exactly in the source;</li><li>preserve at least one pre-change source line from every hunk that was actually modified.</li></ul>
+<p>This is still an <strong>evidence-retention metric</strong>. A passing candidate has retained the material needed to reason about the change; it has not yet generated a patch, run tests, or completed the task.</p>
+<h2 id="results-better-than-positional-truncation-not-magic">Results: better than positional truncation, not magic</h2>
+<p>The clearest budget points are below.</p>
+<div class="table-wrap"><table><thead><tr><th>Source budget</th><th>ContextAdapt strict pass</th><th>Lexical intent retrieval</th><th>Head + tail</th><th>ContextAdapt hunk coverage</th><th>Estimated total input ratio, including issue</th></tr></thead><tbody><tr><td>10%</td><td>10/30 (33%)</td><td>6/30 (20%)</td><td>4/30 (13%)</td><td>41.7%</td><td>14.9%</td></tr><tr><td>20%</td><td>12/30 (40%)</td><td>10/30 (33%)</td><td>8/30 (27%)</td><td>50.0%</td><td>24.4%</td></tr><tr><td>40%</td><td>18/30 (60%)</td><td>18/30 (60%)</td><td>10/30 (33%)</td><td>67.8%</td><td>43.2%</td></tr><tr><td>60%</td><td>22/30 (73%)</td><td>20/30 (67%)</td><td>12/30 (40%)</td><td>85.0%</td><td>62.2%</td></tr><tr><td>100%</td><td>30/30 (100%)</td><td>30/30 (100%)</td><td>30/30 (100%)</td><td>100.0%</td><td>100.0%</td></tr></tbody></table></div>
+<p>Across the seven compressed budgets, ContextAdapt exceeded head-and-tail truncation by <strong>22.4 percentage points</strong> in strict evidence retention. A repository-clustered bootstrap gave a 95% confidence interval of <strong>[+2.4, +40.6]</strong>.</p>
+<p>That is real progress. When full source was unavailable, organizing context around exact evidence and code structure was materially better than keeping only the beginning and end.</p>
+<p>Three less flattering results matter even more.</p>
+<h3 id="1-the-lexical-baseline-remained-competitive">1. The lexical baseline remained competitive</h3>
+<p>ContextAdapt exceeded the simpler lexical-intent retriever by only <strong>7.1 percentage points</strong>, with a 95% confidence interval of <strong>[-2.3, +17.9]</strong>. Because the interval crosses zero, we cannot claim that the structured policy reliably beats that baseline. At the 40% budget, both passed 18 of 30 tasks.</p>
+<h3 id="2-eight-tasks-still-required-the-full-source">2. Eight tasks still required the full source</h3>
+<p>Eight of the 30 holdout tasks needed 100% of the selected source files to retain every modified hunk. A better renderer can improve the hit rate, but it cannot yet know in advance which tasks are unsafe to compress.</p>
+<h3 id="3-the-oracle-exposed-a-large-remaining-gap">3. The oracle exposed a large remaining gap</h3>
+<p>An evaluator-only anchor oracle—allowed to use the answer—outperformed ContextAdapt by <strong>42.9 percentage points</strong>, with a 95% confidence interval of <strong>[+29.8, +55.8]</strong>. The oracle is not deployable. Its value is diagnostic: the difficult problem remains identifying which code will truly matter without seeing the future patch.</p>
+<h2 id="checks-designed-to-make-a-flattering-result-harder">Checks designed to make a flattering result harder</h2>
+<p>The holdout also included tests aimed at breaking the method.</p>
+<ul><li>All <strong>840 budget-monotonicity checks</strong> passed: increasing the budget never removed evidence that had already been retained.</li><li>All <strong>480 oracle-isolation checks</strong> passed.</li><li>No delivered context exceeded its assigned budget.</li><li>No candidate dropped exact issue evidence that the protocol required it to preserve.</li><li>A misleading traceback placed in the correct file still caused one regression at the 40% budget, showing that unverified location hints cannot be trusted blindly.</li></ul>
+<p>The complete frozen ledger and protocol are available in the <a href="../../evidence/">evidence package</a>.</p>
+<h2 id="what-this-experiment-falsified">What this experiment falsified</h2>
+<p>It falsified a conclusion we wanted to believe:</p>
+<blockquote>Preserve the request, create a clever structured slice, and you can immediately know the shortest safe context.</blockquote>
+<p>We cannot make that claim.</p>
+<p>ContextAdapt can now construct a shorter, auditable context candidate that retains strict code evidence more effectively than positional truncation. It can enforce a source budget, preserve specified evidence verbatim, and prevent evidence from disappearing as the budget grows.</p>
+<p>But evidence being present does not mean an agent will use it correctly. A pre-change source line being present does not mean the generated patch will pass its tests.</p>
+<p>The honest label is therefore:</p>
+<pre><code class="language-text">REAL_CODE_RETENTION_HOLDOUT</code></pre>
+<p>Not:</p>
+<pre><code class="language-text">IMPROVED</code></pre>
+<p>This is not a defensive footnote. It is the input to the next product decision.</p>
+<h2 id="what-the-user-facing-product-should-eventually-say">What the user-facing product should eventually say</h2>
+<p>A useful ContextAdapt experience should not show users a complicated evidence table. It should do the work in the background and say something like:</p>
+<pre><code class="language-text">Start with 200K.
+The current goal, permission, exact values, and latest successful state are present.
+If verification fails, upgrade once to 400K and count the cost of both attempts.
+Before writing, check the target, permission, and evidence source again.</code></pre>
+<p>To make those four lines a real promise, the next experiment must close the loop:</p>
+<ol><li>Generate concrete 200K, 400K, and one-million-token candidates.</li><li>Run the same real agent, host, and tool protocol from the smallest candidate first.</li><li>Let a deterministic verifier decide whether the task completed.</li><li>Upgrade at most once after failure.</li><li>Recheck goal, permission, and provenance immediately before mutating tools run.</li><li>Count failed first attempts, review, recovery, retries, larger windows, latency, and provider input cost.</li><li>Compare blindly against “always use the largest window” and “always use the smallest window.”</li></ol>
+<p>Only if ContextAdapt reduces end-to-end cost without lowering completion rate or safety should the evidence label move from retention to improvement.</p>
+<h2 id="four-explicit-limits">Four explicit limits</h2>
+<ul><li>This stage made no new Luna or task-model calls. The 900 Luna trajectories came from frozen external experimental data.</li><li>The real-code study used source-budget ratios from 10% to 100%; it did not rerun a provider at literal 200K, 400K, and one-million-token windows.</li><li>Token cost in the table is estimated as characters divided by four. It is neither a provider tokenizer result nor a real bill.</li><li>Gold-patch files were preselected, so this stage did not test repository-wide file search. Evidence retention is not patch generation, passing tests, or task completion.</li></ul>
+<p>These constraints mean we have a more credible context-candidate generator and a clearer map of where it fails. We do not yet have the final user savings number.</p>
+<h2 id="the-most-useful-result-was-not-the-largest-number">The most useful result was not the largest number</h2>
+<p>If the goal were a clean demo, we could select a few tasks that pass at a 20% budget and announce an 80% saving.</p>
+<p>But a system that intends to stand between an agent and a real tool cannot depend on selecting friendly tasks.</p>
+<p>The most useful result was not the 22.4-point lift. It was narrowing the product claim to something testable:</p>
+<blockquote><strong>ContextAdapt is getting better at constructing context candidates. The next step is to make a real agent, a real verifier, and the full cost ledger determine which candidate is actually the shortest defensible one.</strong></blockquote>
+<p>Research should not manufacture a cleaner story for the product. It should tell us which sentence we have earned the right to say next.</p>
+<hr>
+<h2 id="reproduce-challenge-or-extend-the-work">Reproduce, challenge, or extend the work</h2>
+<ul><li><a href="../../evidence/">Browse the evidence package</a></li><li><a href="../../evidence/p0-results.md">Read the frozen result ledger</a></li><li><a href="../../evidence/protocol-v3.json">Inspect the frozen protocol</a></li><li><a href="https://github.com/cooleryu/ContextAdapt">View ContextAdapt on GitHub</a></li><li><a href="https://github.com/cooleryu/ContextAdapt/issues">Open a methodological question or counterexample</a></li></ul>
+<p>If you maintain a coding agent, I am especially interested in failure traces where the correct evidence was technically available but the agent verified the wrong thing, used an obsolete state, or acted from a permission that had already changed.</p>
+<p><em>Editorial note: this English edition was prepared with AI-assisted translation and editing from the original Chinese research note. The author is responsible for the argument, and every experimental claim was checked against the frozen result ledger.</em></p></article>
+    </div>
+  </main>
+  <footer class="site-footer"><div class="footer-inner">
+    <div><p><strong>Evidence before claims.</strong></p><p class="footer-note">AI agent reliability · context management · execution-time verification</p></div>
+    <p><a href="https://github.com/cooleryu/ContextAdapt">ContextAdapt</a> · <a href="../../feed.xml">RSS</a></p>
+  </div></footer>
+</body>
+</html>

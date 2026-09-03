@@ -1,0 +1,94 @@
+{
+  "schema_version": "contextadapt.p0-real-code-protocol.v3",
+  "protocol_id": "p0-real-code-retention-holdout-v3",
+  "frozen_on": "2026-09-02",
+  "north_star": "Choose the smallest context that preserves safe task completion, counting fixed instructions, rendering, verification, recovery, retries, and supervision.",
+  "research_roles": {
+    "stale_constraints": "motivates active verification allocation and run-level paired inference",
+    "paritok_4b": "motivates real-code compression evaluation and exact edit-context recovery",
+    "jit_agent": "requires model, task, host state, tools, and evaluator to stay fixed across context arms",
+    "pilot": "requires observer intervention and observer cost to be reported separately"
+  },
+  "dataset": {
+    "name": "SWE-bench Lite",
+    "frozen_commit": "6ec7bb89b9342f664a54a6e0a6ea6501d3437cc2",
+    "development_tasks": 23,
+    "holdout_tasks": 30,
+    "holdout_repository_clusters": 12,
+    "source_context": "Only the gold-patch-touched base-commit file is supplied, matching the Paritok within-file framing.",
+    "renderer_visibility": ["problem_statement", "base_commit_source"],
+    "evaluator_only": ["gold_patch", "removed_line_anchors"],
+    "known_scope_limit": "Target-file routing is pre-solved and task execution is not measured."
+  },
+  "frozen_hashes": {
+    "renderer_sha256": "b8ebc970b1bae1e4636cabcb11df81cc640765d331dbcf23467e684a7feed657",
+    "evaluator_sha256": "79cb5552d905a394a9bbc4f3a2b3951ff3e3b82af13d94ab995fdf706dc01ec5",
+    "split_manifest_sha256": "dd6e0a4542a9ea67d9c64e249c043bcf547ad050b88a2635a6eb948b2473c5f7",
+    "source_manifest_sha256": "3b7b9e202d72f5bafe663a5aab0657ec3cf019cf61d116b015a11677eedcfd34"
+  },
+  "post_run_format_only_hashes": {
+    "renderer_sha256": "6a97963f9a674ffca4cda282767bd1b398b7d09e905d485d91dbb8890115b7de",
+    "evaluator_sha256": "179ff5fccea2c3fac0e68d15779792009a31e7799ef93930b3291eafbe85dd29",
+    "note": "Prettier changed bytes after the single scored holdout run. No algorithm, threshold, task, or result was changed; frozen_hashes retain the exact executed bytes."
+  },
+  "design": {
+    "source_budget_ratios": [0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.6, 1.0],
+    "policies": [
+      "raw",
+      "head_tail",
+      "seeded_uniform_lines",
+      "lexical_intent",
+      "structural_intent",
+      "contextadapt_v1",
+      "contextadapt_budgeted_v2",
+      "contextadapt_budgeted_v3",
+      "oracle_gold_anchor"
+    ],
+    "ablation_map": {
+      "structure_value": "contextadapt_budgeted_v3 minus contextadapt_budgeted_v2",
+      "exact_evidence_value": "contextadapt_budgeted_v3 minus structural_intent",
+      "budget_enforcement_value": "contextadapt_budgeted_v3 versus contextadapt_v1",
+      "remaining_headroom": "oracle_gold_anchor minus contextadapt_budgeted_v3"
+    },
+    "cell_count": 2160,
+    "inference_unit": "repository cluster",
+    "bootstrap_draws": 10000,
+    "bootstrap_seed": "contextadapt-real-code-v3-2026-09-02"
+  },
+  "primary_metric": {
+    "name": "strict_retention_success",
+    "definition": "The renderer stays inside its source budget, retains every exact issue line found in source, and retains at least one removed-line anchor from every gold patch hunk.",
+    "primary_curve": "Mean across the seven compressed source budgets from 0.10 through 0.60.",
+    "primary_comparators": ["head_tail", "lexical_intent"],
+    "confidence_interval": "paired percentile bootstrap over repositories"
+  },
+  "secondary_metrics": [
+    "gold_removed_line_recall",
+    "gold_hunk_coverage",
+    "issue_evidence_exact_coverage",
+    "source_estimated_ratio",
+    "all_in_estimated_ratio_including_fixed_problem",
+    "minimum_observed_strict_budget",
+    "safe_block_rate"
+  ],
+  "acceptance_before_opening_holdout": {
+    "exact_issue_evidence": "100 percent in every delivered ContextAdapt v3 cell",
+    "budget_compliance": "zero delivered over-budget cells",
+    "budget_monotonicity": "zero task-level decreases in anchor, hunk, issue, or strict retention when budget increases",
+    "oracle_isolation": "changing the evaluator-only patch changes zero non-oracle renderer outputs",
+    "holdout_primary": "ContextAdapt v3 primary-curve strict retention exceeds both head-tail and lexical-intent; report clustered 95 percent intervals even if they cross zero",
+    "claim_ceiling": "At most REAL_CODE_RETENTION_VALIDATED; never LIVE_TASK_QUALITY_VALIDATED or IMPROVED"
+  },
+  "negative_control": {
+    "name": "untrusted_same_file_traceback",
+    "intervention": "append one explicitly untrusted same-basename traceback pointing at line 1",
+    "purpose": "measure susceptibility of structural retrieval to plausible but misleading location hints",
+    "acceptance": "diagnostic only; regressions must be reported and motivate provenance-aware hint weighting"
+  },
+  "cost_boundary": {
+    "budget_scope": "compressible source context only",
+    "fixed_problem": "excluded from source allocation but included in all-in ratio",
+    "measurement": "characters divided by four",
+    "prohibited_interpretation": "These estimates are not provider tokens, 200K/400K/1M model calls, dollar savings, or task completion."
+  }
+}
