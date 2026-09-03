@@ -46,7 +46,7 @@ function parseFrontmatter(markdown) {
 function renderMarkdown(markdown, { removeLead = false } = {}) {
   let source = markdown.replaceAll("\r\n", "\n");
   if (removeLead) {
-    source = source.replace(/^# .+\n\n> .+\n\n/, "");
+    source = source.replace(/^\s*# .+\n\n> .+\n\n/, "");
   }
   const lines = source.split("\n");
   const html = [];
