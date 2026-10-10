@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="index,follow"><meta name="description" content="A practical guide to coding-agent context: 200K vs 1M, evidence selection, cost and latency, task verification, and open-source evaluation tools. Includes ContextAdapt findings and limits."><meta name="author" content="cooleryu"><meta name="theme-color" content="#f3ecd9"><link rel="canonical" href="https://cooleryu.github.io/ContextAdapt/guides/choosing-context-length-for-coding-agents/"><link rel="alternate" hreflang="en" href="https://cooleryu.github.io/ContextAdapt/guides/choosing-context-length-for-coding-agents/"><link rel="alternate" hreflang="zh-CN" href="https://cooleryu.github.io/ContextAdapt/guides/choosing-context-length-for-coding-agents/zh-CN/"><link rel="alternate" hreflang="x-default" href="https://cooleryu.github.io/ContextAdapt/guides/choosing-context-length-for-coding-agents/"><meta property="og:type" content="article"><meta property="og:title" content="Choosing context length for AI coding agents"><meta property="og:description" content="A practical guide to coding-agent context: 200K vs 1M, evidence selection, cost and latency, task verification, and open-source evaluation tools. Includes ContextAdapt findings and limits."><meta property="og:url" content="https://cooleryu.github.io/ContextAdapt/guides/choosing-context-length-for-coding-agents/"><meta property="og:image" content="https://cooleryu.github.io/ContextAdapt/assets/cooleryu-open-source.png"><meta name="twitter:card" content="summary_large_image"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Choosing context length for AI coding agents","description":"A practical guide to coding-agent context: 200K vs 1M, evidence selection, cost and latency, task verification, and open-source evaluation tools. Includes ContextAdapt findings and limits.","inLanguage":"en","datePublished":"2026-10-10","dateModified":"2026-10-10","mainEntityOfPage":"https://cooleryu.github.io/ContextAdapt/guides/choosing-context-length-for-coding-agents/","author":{"@type":"Person","name":"cooleryu","url":"https://github.com/cooleryu"}}</script><title>Choosing context length for AI coding agents — cooleryu</title><style>:root {
+  --paper: #f3ecd9;
+  --paper-deep: #e6dac0;
+  --ink: #24251f;
+  --muted: #6f6a5f;
+  --navy: #263f59;
+  --navy-soft: #49677f;
+  --wine: #8b2f32;
+  --olive: #6e7969;
+  --gold: #a9803c;
+  --line: rgba(55, 52, 43, 0.22);
+  --panel: rgba(250, 246, 235, 0.78);
+  --shadow: 0 24px 70px rgba(47, 40, 27, 0.13);
+  color-scheme: light;
+  font-family: Georgia, "Times New Roman", "Noto Serif", serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.16)),
+    radial-gradient(circle at 18% 0%, rgba(169, 128, 60, 0.12), transparent 38%),
+    repeating-linear-gradient(0deg, rgba(69, 63, 48, 0.018) 0 1px, transparent 1px 5px),
+    var(--paper);
+  line-height: 1.72;
+}
+
+a {
+  color: var(--navy);
+  text-decoration-color: rgba(38, 63, 89, 0.38);
+  text-underline-offset: 0.16em;
+}
+
+a:hover {
+  color: var(--wine);
+  text-decoration-color: currentColor;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 20;
+  padding: 0.7rem 1rem;
+  color: white;
+  background: var(--wine);
+}
+
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+}
+
+.site-header {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 1.25rem 2rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.brand strong {
+  font-size: 1rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.brand span {
+  color: var(--wine);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.site-nav {
+  display: flex;
+  gap: 1.4rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.site-nav a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.hero {
+  position: relative;
+  min-height: 660px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+  background-image:
+    linear-gradient(90deg, rgba(243, 236, 217, 0.98) 0%, rgba(243, 236, 217, 0.9) 41%, rgba(243, 236, 217, 0.12) 70%),
+    url("https://cooleryu.github.io/ContextAdapt/assets/renaissance-hero-bg-v2.png");
+  background-position: center;
+  background-size: cover;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 1.2rem;
+  pointer-events: none;
+  border: 1px solid rgba(92, 74, 43, 0.24);
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1.22fr) minmax(250px, 0.58fr);
+  gap: 3rem;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 7.5rem 2rem 5rem;
+}
+
+.eyebrow {
+  margin: 0 0 1.2rem;
+  color: var(--wine);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.hero h1,
+.article-hero h1 {
+  max-width: 900px;
+  margin: 0;
+  font-size: clamp(3.3rem, 7.5vw, 6.7rem);
+  font-weight: 600;
+  letter-spacing: -0.055em;
+  line-height: 0.92;
+}
+
+.hero h1 em {
+  color: var(--navy);
+  font-weight: 500;
+}
+
+.hero-deck {
+  max-width: 690px;
+  margin: 2rem 0 0;
+  color: #3f403a;
+  font-size: clamp(1.1rem, 2vw, 1.45rem);
+  line-height: 1.55;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 2.1rem;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.9rem;
+  padding: 0.72rem 1rem;
+  border: 1px solid var(--ink);
+  color: var(--paper);
+  background: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.button.secondary {
+  color: var(--ink);
+  background: rgba(243, 236, 217, 0.68);
+}
+
+.edition-card {
+  align-self: end;
+  padding: 1.4rem;
+  border: 1px solid rgba(47, 44, 36, 0.28);
+  background: rgba(245, 239, 222, 0.8);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(5px);
+}
+
+.edition-card .number {
+  display: block;
+  color: var(--wine);
+  font-size: 4.8rem;
+  line-height: 0.9;
+}
+
+.edition-card p {
+  margin: 0.85rem 0 0;
+  font-style: italic;
+}
+
+.section {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 6rem 2rem;
+}
+
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 2.5rem;
+  color: var(--wine);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.section-label::after {
+  content: "";
+  width: 96px;
+  height: 1px;
+  background: var(--wine);
+}
+
+.manifesto-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 4rem;
+}
+
+.manifesto-grid h2,
+.feature-article h2 {
+  margin: 0;
+  font-size: clamp(2.3rem, 4.5vw, 4rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1.03;
+}
+
+.manifesto-copy {
+  max-width: 720px;
+  font-size: 1.16rem;
+}
+
+.principles {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--line);
+}
+
+.principle {
+  display: grid;
+  grid-template-columns: 60px 1fr;
+  gap: 1rem;
+  padding: 1.2rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.principle b {
+  color: var(--wine);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.feature-article {
+  display: grid;
+  grid-template-columns: 0.84fr 1.16fr;
+  gap: 3.4rem;
+  padding: 2rem;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.result-panel {
+  position: relative;
+  overflow: hidden;
+  padding: 2rem;
+  color: #f5eedc;
+  background: var(--navy);
+}
+
+.result-panel::before {
+  content: "";
+  position: absolute;
+  inset: -25% auto auto 38%;
+  width: 340px;
+  height: 340px;
+  border: 1px solid rgba(234, 218, 174, 0.25);
+  border-radius: 50%;
+  box-shadow: 0 0 0 44px rgba(234, 218, 174, 0.045), 0 0 0 92px rgba(234, 218, 174, 0.035);
+}
+
+.result-panel > * {
+  position: relative;
+}
+
+.result-panel .metric {
+  margin: 2rem 0 0.2rem;
+  color: #f3dfad;
+  font-size: clamp(4.2rem, 7vw, 6rem);
+  line-height: 0.9;
+}
+
+.result-panel small {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.article-copy p {
+  font-size: 1.08rem;
+}
+
+.meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin: 1.2rem 0 1.8rem;
+}
+
+.tag {
+  padding: 0.32rem 0.55rem;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.article-hero {
+  border-bottom: 1px solid var(--line);
+  background:
+    linear-gradient(90deg, rgba(243, 236, 217, 0.99), rgba(243, 236, 217, 0.88) 52%, rgba(243, 236, 217, 0.28)),
+    url("https://cooleryu.github.io/ContextAdapt/assets/renaissance-hero-bg-v2.png");
+  background-position: center;
+  background-size: cover;
+}
+
+.article-hero-inner {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 3rem;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 7rem 2rem 4.5rem;
+}
+
+.article-hero h1 {
+  max-width: 820px;
+  font-size: clamp(3.2rem, 7vw, 6.2rem);
+}
+
+.article-subtitle {
+  max-width: 700px;
+  margin: 1.5rem 0 0;
+  color: var(--navy);
+  font-size: clamp(1.2rem, 2.4vw, 1.7rem);
+  font-style: italic;
+}
+
+.article-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  margin-top: 2rem;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.69rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.claim-card {
+  align-self: end;
+  padding: 1.3rem;
+  border: 1px solid rgba(52, 48, 39, 0.28);
+  background: rgba(245, 239, 222, 0.84);
+  box-shadow: var(--shadow);
+}
+
+.claim-card strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--wine);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.article-layout {
+  display: grid;
+  grid-template-columns: minmax(180px, 250px) minmax(0, 760px);
+  gap: 4.5rem;
+  max-width: 1110px;
+  margin: 0 auto;
+  padding: 5rem 2rem 7rem;
+}
+
+.toc {
+  position: sticky;
+  top: 1.5rem;
+  align-self: start;
+  max-height: calc(100vh - 3rem);
+  overflow: auto;
+  padding: 1rem 1rem 1rem 0;
+  border-right: 1px solid var(--line);
+}
+
+.toc strong {
+  color: var(--wine);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.67rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.toc ol {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.toc li + li {
+  margin-top: 0.62rem;
+}
+
+.toc a {
+  display: block;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+.prose {
+  min-width: 0;
+  font-size: 1.08rem;
+}
+
+.prose > p:first-child::first-letter {
+  float: left;
+  margin: 0.06em 0.12em 0 0;
+  color: var(--wine);
+  font-size: 4.7rem;
+  line-height: 0.78;
+}
+
+.prose h2 {
+  margin: 4.3rem 0 1.2rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--line);
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+}
+
+.prose h3 {
+  margin: 2.5rem 0 0.8rem;
+  color: var(--navy);
+  font-size: 1.45rem;
+  font-weight: 600;
+}
+
+.prose p,
+.prose li {
+  max-width: 72ch;
+}
+
+.prose blockquote {
+  margin: 2.2rem 0;
+  padding: 1.2rem 1.5rem 1.2rem 1.8rem;
+  border-left: 4px solid var(--wine);
+  color: #35362f;
+  background: rgba(255, 252, 243, 0.55);
+  font-size: 1.22rem;
+  font-style: italic;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.35rem;
+}
+
+.prose li + li {
+  margin-top: 0.45rem;
+}
+
+.prose code {
+  padding: 0.14em 0.32em;
+  border: 1px solid rgba(38, 63, 89, 0.14);
+  border-radius: 3px;
+  color: #233b54;
+  background: rgba(38, 63, 89, 0.07);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.86em;
+}
+
+.prose pre {
+  overflow-x: auto;
+  margin: 2rem 0;
+  padding: 1.2rem 1.4rem;
+  border-left: 4px solid var(--gold);
+  color: #eee6d1;
+  background: #253546;
+  box-shadow: var(--shadow);
+}
+
+.prose pre code {
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: none;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  margin: 2rem 0;
+  border: 1px solid var(--line);
+  box-shadow: 0 16px 45px rgba(47, 40, 27, 0.08);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(250, 246, 235, 0.76);
+  font-size: 0.88rem;
+}
+
+th,
+td {
+  padding: 0.8rem 0.85rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  color: var(--paper);
+  background: var(--navy);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.69rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+td:not(:first-child),
+th:not(:first-child) {
+  text-align: left;
+}
+
+.evidence-banner {
+  margin: 3rem 0;
+  padding: 1.2rem 1.4rem;
+  border: 1px solid rgba(110, 121, 105, 0.5);
+  background: rgba(110, 121, 105, 0.1);
+}
+
+.site-footer {
+  border-top: 1px solid var(--line);
+  background: rgba(41, 42, 36, 0.96);
+  color: #ded5c3;
+}
+
+.footer-inner {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2rem;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem;
+}
+
+.site-footer p {
+  margin: 0;
+}
+
+.site-footer a {
+  color: #f1dfb7;
+}
+
+.footer-note {
+  color: #aaa18f;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+}
+
+@media (max-width: 860px) {
+  .site-header,
+  .hero-inner,
+  .section,
+  .article-hero-inner,
+  .article-layout,
+  .footer-inner {
+    padding-left: 1.2rem;
+    padding-right: 1.2rem;
+  }
+
+  .site-nav a:not(:last-child) {
+    display: none;
+  }
+
+  .hero {
+    min-height: auto;
+    background-image:
+      linear-gradient(rgba(243, 236, 217, 0.9), rgba(243, 236, 217, 0.82)),
+      url("https://cooleryu.github.io/ContextAdapt/assets/renaissance-hero-bg-v2.png");
+  }
+
+  .hero-inner,
+  .manifesto-grid,
+  .feature-article,
+  .article-hero-inner,
+  .article-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-inner {
+    padding-top: 5rem;
+  }
+
+  .edition-card,
+  .claim-card {
+    max-width: 390px;
+  }
+
+  .article-layout {
+    gap: 2rem;
+  }
+
+  .toc {
+    position: static;
+    max-height: none;
+    padding: 1rem;
+    border: 1px solid var(--line);
+  }
+}
+
+@media (max-width: 560px) {
+  .brand span {
+    display: none;
+  }
+
+  .hero h1,
+  .article-hero h1 {
+    font-size: 3.25rem;
+  }
+
+  .hero-inner,
+  .article-hero-inner {
+    padding-top: 4.2rem;
+  }
+
+  .section {
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+  }
+
+  .feature-article,
+  .result-panel {
+    padding: 1.25rem;
+  }
+
+  .footer-inner {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+.article-hero h1{font-size:clamp(2.5rem,5vw,4.8rem);line-height:1.1}.prose h2{font-size:clamp(1.5rem,3vw,2.25rem);line-height:1.35}.draft-banner{padding:.75rem 1.2rem;background:#263f59;color:#f3ecd9;text-align:center}.prose > p:first-child::first-letter{float:none;margin:0;font-size:inherit;color:inherit;line-height:inherit}.prose p{overflow-wrap:anywhere}</style></head><body><a class="skip-link" href="#content">Skip to content</a><header class="site-header"><a class="brand" href="https://cooleryu.github.io/ContextAdapt/"><strong>cooleryu</strong><span>Field Notes</span></a><nav class="site-nav"><a href="https://cooleryu.github.io/ContextAdapt/guides/choosing-context-length-for-coding-agents/zh-CN/">中文</a><a href="https://github.com/cooleryu/ContextAdapt">GitHub</a></nav></header><main id="content"><section class="article-hero"><div class="article-hero-inner"><div><p class="eyebrow">ContextAdapt · Practical guide</p><h1>Choosing context length for AI coding agents</h1><div class="article-meta">10 October 2026 · cooleryu · English edition</div><p class="article-subtitle">Select context · Verify results · Count full cost</p></div><aside class="claim-card"><strong>Evidence boundary</strong><p>A decision framework, not a new benchmark result. Published evidence-retention findings remain separate from task success and savings.</p></aside></div></section><div class="article-layout"><aside class="toc"><strong>Eight practical questions</strong><ol><li><a href="#en01">01 · How much context does an AI coding agent need</a></li><li><a href="#en02">02 · How to choose context window size for coding tasks</a></li><li><a href="#en03">03 · Is 200K context enough for coding agents</a></li><li><a href="#en04">04 · How to choose between 200K and 1M for coding</a></li><li><a href="#en05">05 · Does a longer context window improve coding accuracy</a></li><li><a href="#en06">06 · How to balance context length cost latency and accuracy</a></li><li><a href="#en07">07 · How to measure the minimum context for a coding task</a></li><li><a href="#en08">08 · Which open source tools help evaluate agent context length</a></li></ol></aside><article class="prose"><p><strong>Start with the material needed for the change, not the model's largest window.</strong> Gather the relevant code, current instructions, and tests. Check whether that material fits within your active tool's limits. Then run the task and verify the result. A larger window is a candidate to test, not a guarantee of a correct fix.</p>
+<p>This guide helps you choose the first input and decide what to do if it fails. It draws on our work on <a href="https://github.com/cooleryu/ContextAdapt">ContextAdapt</a>. Our <a href="https://cooleryu.github.io/ContextAdapt/articles/how-much-code-context-does-an-ai-agent-need/">published study</a> tests which code evidence different selection methods retain. It does not establish a universal context length for coding agents.</p>
+<h2 id="en01">How much context does an AI coding agent need</h2>
+<p>There is no single token count we can recommend for every coding task. Use the following checklist to prepare a first attempt. It is a starting procedure, not a proven minimum.</p>
+<h3 id="choose-the-material-for-the-task">Choose the material for the task</h3>
+<p>For every task, include the requested behavior, current constraints, permitted changes, and how you will check completion. Then add the relevant code and tests:</p>
+<div class="table-wrap"><table><thead><tr><th>Task</th><th>Material to gather first</th></tr></thead><tbody><tr><td>A bounded bug fix</td><td>The failing input or error, relevant implementation, direct callers, and a test that reproduces the failure.</td></tr><tr><td>A change across modules</td><td>The material above, plus the affected interfaces, configuration, dependencies, and tests for the connected modules.</td></tr><tr><td>A repository-wide migration</td><td>The migration scope, affected modules, current and target versions, compatibility requirements, and migration checks. Retrieve source as each part needs it.</td></tr></tbody></table></div>
+<p>For example, suppose a parser fails on empty input. Include the parsing function, the caller that supplies the input, and the failing test. This is a hypothetical teaching example, not a ContextAdapt result. Do not assume that either one function or the entire repository is always the right input.</p>
+<p>Next, measure the assembled input with the active tool's token counter, if available. Include instructions, conversation history, and tool results in the accounting. Leave output space according to the provider's rules. <strong>Window capacity</strong> is the available limit. <strong>Actual input</strong> is what you send. <strong>Required evidence</strong> is what the task needs. These are different quantities. Check the current provider and tool limits; a model name alone is not enough. See <a href="https://ai.google.dev/gemini-api/docs/long-context">Google's context guide</a> for the window concept.</p>
+<h3 id="if-the-attempt-fails-check-the-cause">If the attempt fails, check the cause</h3>
+<ul><li><strong>A needed file is missing:</strong> retrieve it and retry. Adding relevant material does not always require a larger window.</li><li><strong>Indispensable material will not fit:</strong> test a larger supported budget, or split the work where its dependencies permit. Verify the result in either case.</li><li><strong>The environment or permissions block the task:</strong> repair the test setup if authorized, or stop for permission. More tokens do not resolve these failures.</li></ul>
+<h3 id="what-our-experiment-adds">What our experiment adds</h3>
+<p>At a 40% source budget, our 30-task held-out comparison recorded strict evidence-retention passes for 10 tasks with head-and-tail truncation, 18 with lexical retrieval, and 18 with ContextAdapt v3. The relevant source file was preselected. These were <strong>retention passes, not completed fixes</strong>. This result motivates comparing selection methods; it does not prove that ContextAdapt is better than lexical retrieval at this budget. Read the <a href="https://cooleryu.github.io/ContextAdapt/articles/how-much-code-context-does-an-ai-agent-need/">study and its limitations</a> for the full experiment. It is not a 200K-versus-1M test.</p>
+<h2 id="en02">How to choose context window size for coding tasks</h2>
+<p><strong>Choose a context policy against a clear completion test.</strong> A policy includes what you retrieve, what you keep, and when you add more. The window limit alone does not specify any of these.</p>
+<p>Start with this task card. The example is hypothetical:</p>
+<div class="table-wrap"><table><thead><tr><th>Item</th><th>Example for an API adapter change</th></tr></thead><tbody><tr><td>Required result</td><td>Accept the new response format while preserving the existing format.</td></tr><tr><td>First input</td><td>Both format specifications, adapter code, direct callers, and relevant tests.</td></tr><tr><td>Verification</td><td>New-format tests, old-format regression tests, and a check of the changed files.</td></tr><tr><td>Limits</td><td>Do not edit stored customer data or unrelated modules.</td></tr></tbody></table></div>
+<p>Count the complete request, not just the source files. Instructions, history, and tool results also occupy context, as <a href="https://code.visualstudio.com/docs/agents/concepts/context">VS Code's documentation explains</a>. Reserve output space under the provider's rules.</p>
+<p>Prepare two candidates: the focused material above, and that material plus relevant dependencies that may explain a failure. Run them from separate copies of the same starting state. Keep the model, tools, and tests fixed. Record completion, constraint violations, total cost, and elapsed time.</p>
+<p>If the focused input passes, test that policy on another representative task. If it fails because a dependency is missing, retrieve it before assuming a larger window is necessary. If you must switch models to get a larger window, label the result as a comparison of two setups, not proof of a context-length effect.</p>
+<h2 id="en03">Is 200K context enough for coding agents</h2>
+<p><strong>It can be enough when the necessary input fits and the agent passes the task checks.</strong> These are separate conditions. Fitting within a limit does not prove that the input contains the right evidence or that the agent can use it.</p>
+<p>Here is a hypothetical budget, not a measured ContextAdapt run. Assume the active setup permits 200K tokens shared between input and output, and permits a 16K output allocation:</p>
+<div class="table-wrap"><table><thead><tr><th>Component</th><th>Tokens</th></tr></thead><tbody><tr><td>Instructions, tool definitions, and existing history</td><td>12K</td></tr><tr><td>Selected source code</td><td>68K</td></tr><tr><td>Test results and error details</td><td>4K</td></tr><tr><td>Reserved output allowance</td><td>16K</td></tr><tr><td>Total allocated</td><td>100K</td></tr></tbody></table></div>
+<p>The current input is 84K tokens. This allocation leaves 100K before the assumed shared limit. It does not guarantee space for every later tool result. Recount as the session grows, and check separate input and output limits. Use the active model's counter when available; <a href="https://ai.google.dev/gemini-api/docs/tokens">Google documents request counting and response usage</a>.</p>
+<p>For this example, start with the assembled material and run the tests. Do not add unrelated files to fill the window. If a caller is missing, retrieve that caller. If indispensable material no longer fits, compare a larger supported budget. If tests cannot start because a dependency is absent, fix the authorized environment first. If permission is missing, stop and ask. None of these failures, by itself, proves that 200K is insufficient.</p>
+<h2 id="en04">How to choose between 200K and 1M for coding</h2>
+<p><strong>Compare task outcomes, not window labels.</strong> Here, 200K, 400K, and 1M are example capacity limits. Use them only if your active setup supports them. A 1M limit does not require sending 1M tokens.</p>
+<p>For a cross-module migration, first locate the affected interfaces, callers, and tests. If the relevant material fits within the smaller budget, try that candidate. If necessary relationships cannot be retained together, test a larger candidate or split the work along verifiable boundaries.</p>
+<p>Compare these policies on the same representative tasks:</p>
+<div class="table-wrap"><table><thead><tr><th>Policy</th><th>Rule to test</th></tr></thead><tbody><tr><td>Fixed smaller limit</td><td>Retrieve relevant material within the smaller limit.</td></tr><tr><td>Fixed larger limit</td><td>Allow more relevant material, without filling space deliberately.</td></tr><tr><td>Conditional enlargement</td><td>Start smaller; add capacity only when a recorded missing-evidence or fit problem justifies it.</td></tr></tbody></table></div>
+<p>Specify retry limits before running. Count the first attempt, retrieval, preparation, and every retry. Keep the model and tools fixed where possible. Include an intermediate 400K candidate only if it helps answer a real decision.</p>
+<p>Check the tool's summarization behavior too. <a href="https://code.visualstudio.com/docs/agents/concepts/context">VS Code documents</a> that older conversation details may be compressed or lost when it summarizes history. A larger limit and a better summary policy are different changes.</p>
+<p>Select the policy that meets your declared completion and safety criteria at an acceptable total cost. An adaptive policy is a candidate, not an assumed winner. Our <a href="https://cooleryu.github.io/ContextAdapt/articles/how-much-code-context-does-an-ai-agent-need/">published retention experiment</a> does not establish which of these window sizes wins.</p>
+<h2 id="en05">Does a longer context window improve coding accuracy</h2>
+<p><strong>Sometimes, but a larger window is not a guarantee of a correct patch.</strong> It can help when it restores information the task needs. It does not prove that the agent will use that information correctly.</p>
+<p>A 2024 Google and Sourcegraph case study reported better technical question answering with a long-context Cody setup. That is evidence for that setup and task, not a universal improvement in bug fixing. Google's context guide also warns that retrieving several pieces of information can be less reliable than finding one. <a href="https://developers.googleblog.com/en/supercharging-ai-coding-assistants-with-massive-context/">Coding assistant case study</a> · <a href="https://ai.google.dev/gemini-api/docs/long-context#long-context-limitations">Retrieval limits</a></p>
+<p>Before paying for more context, compare three inputs on the same task:</p>
+<ol><li>The current input.</li><li>The same input plus specific missing evidence, such as a caller or failing test.</li><li>A larger collection that includes that evidence and more surrounding code.</li></ol>
+<p>Keep the model, starting code, tools, and acceptance tests fixed. Repeat each condition. Compare verified fixes, regressions, unauthorized actions, cost, and time. If only the focused addition helps, the result favors that selection policy; it does not justify filling the window. If larger inputs help repeatedly, test whether the gain is worth their total cost.</p>
+<p>Our published study below answers a narrower question: which code evidence survives selection. It does not measure completed repairs.</p>
+<h3 id="what-our-held-out-comparison-actually-found">What our held out comparison actually found</h3>
+<p>In our study frozen on 2 September 2026, we tested context selection on 30 held-out SWE-bench Lite tasks from 12 repositories. At the same 40% source budget, the strict evidence-retention results were:</p>
+<div class="table-wrap"><table><thead><tr><th>Context selection policy</th><th>Tasks meeting the retention criteria</th></tr></thead><tbody><tr><td>Head and tail truncation</td><td>10 of 30</td></tr><tr><td>Lexical intent retrieval</td><td>18 of 30</td></tr><tr><td>ContextAdapt v3</td><td>18 of 30</td></tr></tbody></table></div>
+<p>A pass required staying within budget, preserving every exact issue line found in the source, and retaining at least one original line marked for removal in each reference-patch hunk. It did <strong>not</strong> mean the agent fixed the issue. The relevant file was preselected using the reference patch; the selector saw the issue and original source, while patch contents remained evaluator-only. Repository search and patch execution were outside this test.</p>
+<p>This comparison gives a practical reason to test <strong>which context you keep</strong>, not just how much. It also challenges our own design: at this budget, the more elaborate policy did not beat lexical retrieval. Averaged over all seven compressed budgets, its advantage over lexical retrieval was 7.1 percentage points, with a 95% confidence interval of −2.3 to +17.9; that improvement remains inconclusive.</p>
+<p>For a builder choosing a policy, the implication is to include a simple relevance-based baseline before adding complexity. Beating truncation alone is not enough. These percentages are source-allocation budgets using a character-based token estimate, not comparisons of literal 200K and 1M windows. See the <a href="https://cooleryu.github.io/ContextAdapt/evidence/p0-results.md">result ledger</a> and <a href="https://cooleryu.github.io/ContextAdapt/evidence/protocol-v3.json">frozen protocol</a> for the full comparison.</p>
+<h2 id="en06">How to balance context length cost latency and accuracy</h2>
+<p><strong>Choose an acceptable completion rate and safety requirement first. Then compare total cost and time.</strong> The cheapest request is not necessarily the cheapest completed task.</p>
+<p>Keep one record per task attempt:</p>
+<div class="table-wrap"><table><thead><tr><th>Record</th><th>What to include</th></tr></thead><tbody><tr><td>Outcome</td><td>Independent test result, regressions, constraint violations, and failure reason.</td></tr><tr><td>Usage and charges</td><td>All input and output tokens, cached usage, preparation calls, retrieval, retries, and escalations. Record actual charges separately from estimates.</td></tr><tr><td>Time</td><td>Start to final outcome, including tools and retries. Keep first-token latency separate.</td></tr><tr><td>Conditions</td><td>Model, context policy, task version, and cache state.</td></tr></tbody></table></div>
+<p>For Gemini, Google notes that longer requests generally increase time to first token, while caching can reduce repeated-input costs. Neither claim gives the total time or price of your coding workflow. Check the active provider's rules and measure the full run. <a href="https://ai.google.dev/gemini-api/docs/long-context#does-the-context-length-affect-the-model-latency">Latency guidance</a> · <a href="https://ai.google.dev/gemini-api/docs/caching">Caching documentation</a></p>
+<p>A useful summary is <strong>total measured cost, including failed attempts, divided by verified completions</strong>.</p>
+<p>For a fictional example, policy A spends $2 across ten tasks and completes eight: $0.25 per verified completion. Policy B spends $1.50 on the same ten tasks and completes five: $0.30 per completion. A costs more overall but less per completed task. This is arithmetic, not a ContextAdapt result or a provider quote.</p>
+<p>Report completion rate, safety failures, and typical and slow-run times beside that ratio. If no task completes, the ratio is undefined. A policy that violates a required safety condition remains unacceptable even when its average cost is low.</p>
+<h2 id="en07">How to measure the minimum context for a coding task</h2>
+<p>Measure the <strong>smallest tested context that meets a fixed acceptance rule</strong>, not a universal minimum. Start with one bounded fix and one harder cross-file change.</p>
+<ol><li>Freeze both tasks, starting commits, required tests, protected files, and success thresholds. Keep expected patches out of context selection.</li><li>Choose several supported input budgets. Apply each budget to every model request, not just the opening prompt. Fix the model, tools, output allowance, retrieval, and summarization rules. Changing the selection policy as well as the size tests two factors.</li><li>Run each candidate from a clean state. Set repetitions, retry limits, and escalation rules before starting. Keep every failure.</li><li>Save the actual context and all attempts. Count retrieval, preparation, review, retries, input/output usage, cost, and end-to-end time.</li><li>Compare completion, constraint violations, and cost. Repeat promising candidates on unseen tasks before making a broader recommendation.</li></ol>
+<p>Use one row per task, candidate, and repetition:</p>
+<div class="table-wrap"><table><thead><tr><th>Record</th><th>Save</th></tr></thead><tbody><tr><td>Setup</td><td>Task, commit, model, selection policy, input budget</td></tr><tr><td>Outcome</td><td>Required tests, protected-file checks, failure reason</td></tr><tr><td>Full attempt</td><td>Actual input, output usage, retries, cost, elapsed time</td></tr></tbody></table></div>
+<p>Do not assume that success rises steadily with context length. A binary search alone cannot establish the minimum. One successful attempt is also not evidence of reliability.</p>
+<p>Retained evidence and completed repairs are different measurements. <a href="https://arxiv.org/abs/2602.05892">ContextBench</a> likewise measures intermediate context retrieval rather than relying only on final success.</p>
+<p>In our frozen retention study, ContextAdapt v3 required the full <strong>preselected source</strong> for 8 of 30 held-out tasks among tested budgets to retain every reference-patch hunk anchor. This does not mean eight live Agents required a full repository. It motivates the real-Agent test above, not an automatic stopping rule. <a href="https://cooleryu.github.io/ContextAdapt/evidence/p0-results.md">Frozen results</a></p>
+<h2 id="en08">Which open source tools help evaluate agent context length</h2>
+<p>Choose a tool by what you need to measure. These three do not automatically identify the optimal context window for your application.</p>
+<div class="table-wrap"><table><thead><tr><th>Tool</th><th>Measured unit</th><th>Does not establish</th><th>Where to start</th></tr></thead><tbody><tr><td><a href="https://github.com/NVIDIA/RULER">RULER</a></td><td>Synthetic long-context tasks with controlled length and complexity</td><td>Whether an Agent can safely repair your repository</td><td>Follow the current evaluation branches linked from its README</td></tr><tr><td><a href="https://www.swebench.com/SWE-bench/guides/evaluation/">SWE-bench</a></td><td>Generated patches applied to real repositories and checked with tests</td><td>Which context policy caused the result or its total cost</td><td>Read the Lite evaluation and prediction-format instructions</td></tr><tr><td><a href="https://github.com/cooleryu/ContextAdapt">ContextAdapt</a></td><td>In the published study: retained edit evidence under fixed source budgets</td><td>Live repair gains, bill savings, or a universal minimum window</td><td>Inspect the <a href="https://cooleryu.github.io/ContextAdapt/evidence/">evidence package</a> and frozen comparison</td></tr></tbody></table></div>
+<p>RULER helps test a model's long-context behavior. SWE-bench checks whether submitted patches resolve its tasks. ContextAdapt's published study compares how material-selection methods preserve source evidence. These are complementary jobs, not interchangeable scores.</p>
+<p>Our study itself uses SWE-bench Lite tasks. It does not replace SWE-bench or claim to outperform its evaluation framework.</p>
+<p>For your first coding experiment, use the two tasks and record format above. Produce a patch for each candidate, then run the same independent tests. If the Agent fails, examine its retrieved context separately from its patch. Add a synthetic benchmark when you also need to investigate long-context retrieval.</p>
+<p>Check hardware, storage, credentials, and model-call costs before running an upstream benchmark. Reading its results is a different step from reproducing them.</p></article></div></main></body></html>
