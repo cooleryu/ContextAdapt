@@ -10,6 +10,10 @@ Too little context can drop the current target, a corrected value, or a revoked 
 
 Version 0.2 contains the core P0 runtime loop: two independent Luna captures turn a natural-language task update into reviewed state; the host records permissions, successful tool state, and token positions; ContextAdapt selects 200K, 400K, or the 1M-window tier before the task Agent; Codex/OMP check the actual write arguments immediately before mutation; and a recoverable stale scalar can trigger exactly one target-bound read-only refresh before a second gate. The Codex reference path can now observe an opt-in ordinary task without touching its primary run, stay out with zero Luna calls when 200K already fits, and replay a supported task from its real pre-write state. The engineering slice is accepted; the multi-bucket natural cohort is still accumulating. See the [product roadmap](docs/product-roadmap.md).
 
+## Choosing a context window
+
+How much context does a coding agent need? Start with the practical guide to compare context budgets, total cost, latency, and task verification: [English guide](https://cooleryu.github.io/ContextAdapt/guides/choosing-context-length-for-coding-agents/) · [中文指南](https://cooleryu.github.io/ContextAdapt/guides/choosing-context-length-for-coding-agents/zh-CN/).
+
 ## Fastest real user path: install once, then use OMP normally
 
 From this checkout:
