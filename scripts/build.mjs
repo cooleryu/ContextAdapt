@@ -304,7 +304,8 @@ function write(relative, content) {
   fs.writeFileSync(target, content.endsWith("\n") ? content : `${content}\n`);
 }
 
-write("index.html", homePage);
+// Keep Search Console ownership verification on the homepage after rebuilds.
+write("index.html", homePage.replace("</head>", '  <meta name="google-site-verification" content="NBRywqYk3WSaD1XeLZFhCW5BSrJxVmH_-rRW4QGR8dU" />\n</head>'));
 write(`articles/${article.slug}/index.html`, articlePage);
 write("evidence/index.html", evidencePage);
 write("evidence/p0-results/index.html", ledgerPage);
