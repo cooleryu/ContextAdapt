@@ -253,7 +253,7 @@ const articlePage = shell({
 });
 
 const homePage = shell({
-  title: "cooleryu — AI Agent Reliability Field Notes",
+  title: "ContextAdapt — AI Agent Reliability Field Notes by cooleryu",
   description: "Open research notes on context management, reproducible agent failures, and execution-time verification. Building ContextAdapt.",
   canonical: `${siteUrl}/`,
   prefix: "",
