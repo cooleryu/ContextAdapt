@@ -14,6 +14,13 @@ Version 0.2 contains the core P0 runtime loop: two independent Luna captures tur
 
 How much context does a coding agent need? Start with the practical guide to compare context budgets, total cost, latency, and task verification: [English guide](https://cooleryu.github.io/ContextAdapt/guides/choosing-context-length-for-coding-agents/) · [中文指南](https://cooleryu.github.io/ContextAdapt/guides/choosing-context-length-for-coding-agents/zh-CN/).
 
+## Articles / 文章
+
+- **Codex at 500K: more room, but check the state before writing** — [English](https://cooleryu.github.io/ContextAdapt/articles/codex-500k-context/) · [中文](https://cooleryu.github.io/ContextAdapt/articles/codex-500k-context/zh-CN/)
+- **The Plan Was Valid. The World Had Changed. / 计划没有错，世界已经变了** — [English](https://cooleryu.github.io/ContextAdapt/articles/the-plan-was-valid/en/) · [中文](https://cooleryu.github.io/ContextAdapt/articles/the-plan-was-valid/)
+- [How Much Code Context Does an AI Agent Need?](https://cooleryu.github.io/ContextAdapt/articles/how-much-code-context-does-an-ai-agent-need/)
+- **Choosing Context Length for Coding Agents** — [English guide](https://cooleryu.github.io/ContextAdapt/guides/choosing-context-length-for-coding-agents/) · [中文指南](https://cooleryu.github.io/ContextAdapt/guides/choosing-context-length-for-coding-agents/zh-CN/)
+
 ## Fastest real user path: install once, then use OMP normally
 
 From this checkout:
