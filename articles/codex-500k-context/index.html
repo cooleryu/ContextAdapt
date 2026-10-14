@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Codex at 500K: more room, but check the state before writing — cooleryu</title>
+  <meta name="description" content="Start with the default, restore missing evidence, and check the current target, file state, and permission before writing.">
+  <meta name="author" content="cooleryu">
+  <meta name="theme-color" content="#f3ecd9">
+  <link rel="canonical" href="https://cooleryu.github.io/ContextAdapt/articles/codex-500k-context/">
+  <link rel="alternate" hreflang="en" href="https://cooleryu.github.io/ContextAdapt/articles/codex-500k-context/">
+<link rel="alternate" hreflang="zh-CN" href="https://cooleryu.github.io/ContextAdapt/articles/codex-500k-context/zh-CN/">
+<link rel="alternate" hreflang="x-default" href="https://cooleryu.github.io/ContextAdapt/articles/codex-500k-context/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Codex at 500K: more room, but check the state before writing">
+  <meta property="og:description" content="Start with the default, restore missing evidence, and check the current target, file state, and permission before writing.">
+  <meta property="og:url" content="https://cooleryu.github.io/ContextAdapt/articles/codex-500k-context/">
+  <meta property="og:image" content="https://cooleryu.github.io/ContextAdapt/assets/cooleryu-open-source.png">
+  <meta property="article:published_time" content="2026-10-14T00:00:00+08:00">
+  <meta property="article:modified_time" content="2026-10-14T00:00:00+08:00">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Codex at 500K: more room, but check the state before writing">
+  <meta name="twitter:description" content="Start with the default, restore missing evidence, and check the current target, file state, and permission before writing.">
+  <meta name="twitter:image" content="https://cooleryu.github.io/ContextAdapt/assets/cooleryu-open-source.png">
+  <link rel="stylesheet" href="../../assets/site.css">
+  <link rel="stylesheet" href="../../assets/article-additions.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Codex at 500K: more room, but check the state before writing","description":"Start with the default, restore missing evidence, and check the current target, file state, and permission before writing.","inLanguage":"en","datePublished":"2026-10-14","dateModified":"2026-10-14","mainEntityOfPage":"https://cooleryu.github.io/ContextAdapt/articles/codex-500k-context/","author":{"@type":"Person","name":"cooleryu","url":"https://github.com/cooleryu"},"about":{"@type":"SoftwareSourceCode","name":"ContextAdapt","codeRepository":"https://github.com/cooleryu/ContextAdapt"}}</script>
+</head>
+<body class="quick-take">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header">
+    <a class="brand" href="../../"><strong>cooleryu</strong><span>Field Notes</span></a>
+    <nav class="site-nav" aria-label="Primary"><a href="../../#writing">Writing</a><a href="../../evidence/">Evidence</a><a href="https://github.com/cooleryu/ContextAdapt">GitHub ↗</a></nav>
+  </header>
+  <main id="content">
+    <section class="article-hero"><div class="article-hero-inner article-addition-hero"><div>
+      <p class="eyebrow">ContextAdapt · Quick take</p>
+      <h1>Codex at 500K: more room, but check the state before writing</h1>
+      <div class="article-meta"><span>Published <time datetime="2026-10-14">2026-10-14</time></span><span>By cooleryu</span><span>English edition</span></div>
+      <nav class="language-links" aria-label="Article language"><a href="./" lang="en" aria-current="page">English</a> · <a href="zh-CN/" lang="zh-CN">中文</a></nav>
+    </div></div></section>
+    <div class="article-layout">
+      <aside class="toc" aria-label="Table of contents"><strong>On this page</strong><ol><li><a href="#keep-the-default-until-the-task-gives-you-a-reason">Keep the default until the task gives you a reason</a></li><li><a href="#more-remembered-history-can-include-an-expired-plan">More remembered history can include an expired plan</a></li><li><a href="#what-our-existing-results-show">What our existing results show</a></li><li><a href="#run-a-comparison-you-can-learn-from">Run a comparison you can learn from</a></li><li><a href="#faq">FAQ</a></li><li><a href="#what-this-article-has-not-established">What this article has not established</a></li></ol></aside>
+      <article class="prose"><div class="quick-lead"><p><strong>A larger default window gives Codex more room before capacity-triggered compaction. Whether it makes the right edit still depends on current evidence and permission. Start with the default, restore missing evidence deliberately, and check what is still true before writing.</strong></p></div>
+<p><a href="https://x.com/thsottiaux/status/2109430343346581527">Tibo says</a> GPT-6.1 Sol's default in Codex and Work has increased from 272K to 500K to reduce compaction and preserve nuance, with overrides up to 1M. He also says <a href="https://x.com/thsottiaux/status/2109430894604026039">subscription usage has no long-context surcharge</a>.</p>
+<h2 id="keep-the-default-until-the-task-gives-you-a-reason">Keep the default until the task gives you a reason</h2>
+<p>If the agent loses a dependency, constraint, or earlier decision that still matters, restore that evidence first. Then compare a larger input containing the same evidence and more surrounding material. Look for a better result, not simply a fuller window.</p>
+<p>For a local change with clear current state, try more focused input. Reducing active material and lowering the host's window limit are different changes; record which you made. Count reacquisition and retries when judging the result.</p>
+<h2 id="more-remembered-history-can-include-an-expired-plan">More remembered history can include an expired plan</h2>
+<p>Imagine an agent reading a staging configuration and preparing an edit. Before it resumes, the user changes the target and revokes permission. The old plan still makes sense, and a large window may preserve every word. Its authority has expired.</p>
+<p>Before writing, check the current target, relevant file state, and authorization; refresh conflicting evidence. I discuss this problem in more detail in <a href="../the-plan-was-valid/en/"><em>The plan was valid. The world had changed</em></a>.</p>
+<h2 id="what-our-existing-results-show">What our existing results show</h2>
+<p>In an earlier ContextAdapt experiment, <code>gpt-5.6-luna</code> resolved synthetic histories involving a changed target, revoked permission, or failed observation. Passing meant that its decision JSON matched the expected answer. The <a href="https://github.com/cooleryu/ContextAdapt/blob/960309fddf7115d730043501122c50f2d35955eb/experiments/long-context/results/luna-v1.jsonl">individual results</a> and <a href="https://github.com/cooleryu/ContextAdapt/blob/960309fddf7115d730043501122c50f2d35955eb/experiments/long-context/results/luna-v1-summary.json">summary</a> are public.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Experiment results table"><table><thead><tr><th scope="col">Target tier</th><th scope="col">Measured final-turn input tokens</th><th scope="col">Decision checks passed</th></tr></thead><tbody><tr><td>200K</td><td>197,802–197,835</td><td>3/3</td></tr><tr><td>400K</td><td>393,709–393,747</td><td>3/3</td></tr><tr><td>1M target load</td><td>883,258–883,470</td><td>3/3</td></tr></tbody></table></div>
+<p>The lesson is modest: explicitly marked state changes remained solvable in these runs.</p>
+<p>The separate retention benchmark in our <a href="../how-much-code-context-does-an-ai-agent-need/">published study</a> used 30 held-out tasks from 12 repositories. At a 40% source budget, head-and-tail truncation passed strict retention on 10/30 tasks; lexical retrieval and ContextAdapt v3 both passed on 18/30.</p>
+<p>Across the compressed-budget curve, ContextAdapt's advantage over lexical retrieval was 7.1 percentage points, with a 95% interval from −2.3 to +17.9. Include a simple relevance-based baseline before adding a complicated selector: that interval leaves the advantage uncertain. The <a href="https://github.com/cooleryu/ContextAdapt/blob/258861ec7e732ff38c587558626b4db432c6b120/evidence/p0-results.md">result ledger</a> and <a href="https://github.com/cooleryu/ContextAdapt/blob/258861ec7e732ff38c587558626b4db432c6b120/evidence/protocol-v3.json">protocol</a> are public; the underlying per-case data remain in internal project experiment records and are not yet public.</p>
+<h2 id="run-a-comparison-you-can-learn-from">Run a comparison you can learn from</h2>
+<p>Keep the task, starting commit, model, tools, permissions, and independent acceptance tests fixed. Compare the default input, a targeted evidence addition, and a larger input; repeat each condition. Our <a href="../../guides/choosing-context-length-for-coding-agents/">context-length guide</a> walks through this process.</p>
+<p>Record completed fixes, regressions, unauthorized actions, compactions, repeated reads, all attempts' tokens, and elapsed time. Missing telemetry stays unknown. Count the whole attempt history, not just the successful final request.</p>
+<h2 id="faq">FAQ</h2>
+<div class="quick-faq"><details class="quick-faq-item" open><summary><h3 id="should-i-change-settings-immediately-because-the-default-is-500k">Should I change settings immediately because the default is 500K?</h3></summary><div class="quick-faq-answer"><p>Inspect the current session's model and effective capacity. Keep the default while establishing a baseline unless necessary evidence is missing.</p></div></details>
+<details class="quick-faq-item"><summary><h3 id="is-500k-or-1m-better-for-a-coding-agent">Is 500K or 1M better for a coding agent?</h3></summary><div class="quick-faq-answer"><p>Compare matched tasks. Expand when the larger condition repeatedly improves independently verified outcomes.</p></div></details>
+<details class="quick-faq-item"><summary><h3 id="why-does-my-client-still-show-258k">Why does my client still show 258K?</h3></summary><div class="quick-faq-answer"><p><a href="https://linux.do/t/topic/3013574">A LINUX DO user raised the same question</a>, but the display alone cannot identify the cause. Record client version, session model, capacity field, and overrides; distinguish the announced default, effective capacity, and available input budget.</p></div></details>
+<details class="quick-faq-item"><summary><h3 id="does-less-compaction-mean-fewer-mistakes">Does less compaction mean fewer mistakes?</h3></summary><div class="quick-faq-answer"><p>Check what survives, whether obsolete state is being used, and whether the task passes. Compaction count measures a process, not correctness.</p></div></details>
+<details class="quick-faq-item"><summary><h3 id="how-do-i-measure-the-context-my-task-actually-needs">How do I measure the context my task actually needs?</h3></summary><div class="quick-faq-answer"><p>Use a repeatable task and independent verifier, add missing evidence deliberately, then compare supported capacities. A single success does not establish the smallest safe context.</p></div></details></div>
+<h2 id="what-this-article-has-not-established">What this article has not established</h2>
+<ul><li>We have not tested Codex 500K or ranked it against other capacities. The subscription announcement does not describe <a href="https://developers.openai.com/api/docs/models/gpt-6.1-sol">API billing</a>, and the 258K report does not establish a cause.</li><li>The input-load experiment checked decision JSON, executed no code changes, and ran each scenario once per tier. Context load and turn count changed while the configured window stayed constant; 1M was a target, not measured input.</li><li>Retention required exact issue lines, original-source anchors for every reference-patch hunk, and budget compliance. Files were preselected and budgets were character estimates; this does not demonstrate bug fixes or savings.</li><li>OMP integration used a deterministic provider to test enforcement before writes, not live-model context quality; that record is not yet public. The staging scenario is illustrative.</li></ul>
+<p>Further reading: <a href="https://github.com/cooleryu/ContextAdapt">ContextAdapt on GitHub</a> · <a href="../how-much-code-context-does-an-ai-agent-need/">Code-retention study</a> · <a href="../../guides/choosing-context-length-for-coding-agents/">Context-length guide</a>.</p></article>
+    </div>
+  </main>
+  <footer class="site-footer"><div class="footer-inner"><div><p><strong>Evidence before claims.</strong></p><p class="footer-note">AI agent reliability · context management · execution-time verification</p></div><p><a href="https://github.com/cooleryu/ContextAdapt">ContextAdapt</a> · <a href="../../feed.xml">RSS</a></p></div></footer>
+</body>
+</html>

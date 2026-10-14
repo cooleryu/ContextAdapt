@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Plan Was Valid. The World Had Changed: Why Context Problems in Long-Horizon Agents Become Execution Problems — cooleryu</title>
+  <meta name="description" content="A short review of recent research, controlled experiments, and executor integration: long-context failures are not only about forgetting. Agents may act on facts and permissions that have already expired.">
+  <meta name="author" content="cooleryu">
+  <meta name="theme-color" content="#f3ecd9">
+  <link rel="canonical" href="https://cooleryu.github.io/ContextAdapt/articles/the-plan-was-valid/en/">
+  <link rel="alternate" hreflang="zh-CN" href="https://cooleryu.github.io/ContextAdapt/articles/the-plan-was-valid/">
+<link rel="alternate" hreflang="en" href="https://cooleryu.github.io/ContextAdapt/articles/the-plan-was-valid/en/">
+<link rel="alternate" hreflang="x-default" href="https://cooleryu.github.io/ContextAdapt/articles/the-plan-was-valid/en/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="The Plan Was Valid. The World Had Changed: Why Context Problems in Long-Horizon Agents Become Execution Problems">
+  <meta property="og:description" content="A short review of recent research, controlled experiments, and executor integration: long-context failures are not only about forgetting. Agents may act on facts and permissions that have already expired.">
+  <meta property="og:url" content="https://cooleryu.github.io/ContextAdapt/articles/the-plan-was-valid/en/">
+  <meta property="og:image" content="https://cooleryu.github.io/ContextAdapt/assets/cooleryu-open-source.png">
+  <meta property="article:published_time" content="2026-10-14T00:00:00+08:00">
+  <meta property="article:modified_time" content="2026-10-14T00:00:00+08:00">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="The Plan Was Valid. The World Had Changed: Why Context Problems in Long-Horizon Agents Become Execution Problems">
+  <meta name="twitter:description" content="A short review of recent research, controlled experiments, and executor integration: long-context failures are not only about forgetting. Agents may act on facts and permissions that have already expired.">
+  <meta name="twitter:image" content="https://cooleryu.github.io/ContextAdapt/assets/cooleryu-open-source.png">
+  <link rel="stylesheet" href="../../../assets/site.css">
+  <link rel="stylesheet" href="../../../assets/article-additions.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"The Plan Was Valid. The World Had Changed: Why Context Problems in Long-Horizon Agents Become Execution Problems","description":"A short review of recent research, controlled experiments, and executor integration: long-context failures are not only about forgetting. Agents may act on facts and permissions that have already expired.","inLanguage":"en","datePublished":"2026-10-14","dateModified":"2026-10-14","mainEntityOfPage":"https://cooleryu.github.io/ContextAdapt/articles/the-plan-was-valid/en/","author":{"@type":"Person","name":"cooleryu","url":"https://github.com/cooleryu"},"about":{"@type":"SoftwareSourceCode","name":"ContextAdapt","codeRepository":"https://github.com/cooleryu/ContextAdapt"}}</script>
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header">
+    <a class="brand" href="../../../"><strong>cooleryu</strong><span>Field Notes</span></a>
+    <nav class="site-nav" aria-label="Primary"><a href="../../../#writing">Writing</a><a href="../../../evidence/">Evidence</a><a href="https://github.com/cooleryu/ContextAdapt">GitHub ↗</a></nav>
+  </header>
+  <main id="content">
+    <section class="article-hero"><div class="article-hero-inner article-addition-hero"><div>
+      <p class="eyebrow">ContextAdapt · Research note</p>
+      <h1>The Plan Was Valid. The World Had Changed.</h1>
+      <div class="article-meta"><span>Published <time datetime="2026-10-14">2026-10-14</time></span><span>By cooleryu</span><span>English edition</span></div>
+      <nav class="language-links" aria-label="Article language"><a href="../" lang="zh-CN">中文</a> · <a href="./" lang="en" aria-current="page">English</a></nav>
+    </div></div></section>
+    <div class="article-layout">
+      <aside class="toc" aria-label="Table of contents"><strong>On this page</strong><ol><li><a href="#01-from-fitting-more-context-to-managing-it">01 / From fitting more context to managing it</a></li><li><a href="#02-managing-context-is-not-the-same-as-authorizing-an-action">02 / Managing context is not the same as authorizing an action</a></li><li><a href="#03-our-first-experiment-challenged-the-easiest-story-to-tell">03 / Our first experiment challenged the easiest story to tell</a></li><li><a href="#04-the-danger-is-not-just-missing-a-fact-it-is-binding-it-incorrectly">04 / The danger is not just missing a fact—it is binding it incorrectly</a></li><li><a href="#05-from-failure-attribution-to-paired-replay-from-the-same-state">05 / From failure attribution to paired replay from the same state</a></li><li><a href="#06-the-final-step-making-validation-stop-a-tool-call">06 / The final step: making validation stop a tool call</a></li><li><a href="#07-why-a-semantic-layer-is-still-needed-and-is-not-a-safety-proof">07 / Why a semantic layer is still needed—and is not a safety proof</a></li><li><a href="#08-what-contextadapt-has-not-established">08 / What ContextAdapt has not established</a></li><li><a href="#09-a-more-precise-question">09 / A more precise question</a></li><li><a href="#references-and-experiment-records">References and experiment records</a></li></ol></aside>
+      <article class="prose"><blockquote>Why context problems in long-horizon agents become execution problems</blockquote>
+<p><strong>Author: cooleryu</strong></p>
+<p>An AI agent can remember every fact and still execute an apparently correct action at the wrong time.</p>
+<p>Consider this sequence:</p>
+<ul><li>At 10:02, the agent reads that the current environment is <code>staging</code> and that protected configuration may be modified.</li><li>At 10:16, it plans a change to <code>staging/config.json</code>, but the task is interrupted.</li><li>At 10:40, the environment has switched to <code>production</code>, the timeout has changed, and modifying protected configuration is no longer permitted.</li><li>At 11:05, the old plan resumes.</li></ul>
+<p>The plan may be syntactically valid. The path may still exist. Every old fact may once have been correct. The problem is that <strong>the world that justified the action no longer exists.</strong></p>
+<p>This is the view I gradually arrived at while building <a href="https://github.com/cooleryu/ContextAdapt">ContextAdapt</a>. Context problems in long-horizon agents are not just about what a model forgets, or how much more text we can fit into its window. There is another question, closer to execution:</p>
+<blockquote>When an agent is about to call a tool, can we establish that the action is still supported by the current state, instructions, and permissions?</blockquote>
+<p>This article brings together related research and experiments from an early Python prototype of ContextAdapt, with their evidence and limitations. Citing these papers does not mean that we have reproduced or improved on their results.</p>
+<h2 id="01-from-fitting-more-context-to-managing-it">01 / From fitting more context to managing it</h2>
+<p>Early discussions often reduced long context to window size: if a model could read more tokens, long-running tasks would become more reliable. Recent research presents a more complicated picture.</p>
+<p><a href="https://arxiv.org/abs/2602.07962">LOCA-bench</a> treats growth in the environment itself as a controlled variable, studying agents under dynamic long-context conditions. Across the models and configurations it tested, longer environment descriptions generally accompanied worse performance; some context-management strategies improved the results.</p>
+<p><a href="https://arxiv.org/abs/2602.05892">ContextBench</a> spans 66 repositories, 8 programming languages, and 1,136 tasks. It draws a useful distinction: an agent's having explored a piece of context does not mean it includes that material in the context it ultimately declares for generating a patch. There is still a gap between visiting information and declaring its use.</p>
+<p>Other work gives agents a more active role in editing, externalizing, or compressing context. <a href="https://arxiv.org/abs/2607.23809">ACM</a> studies agent-controlled context editing and external memory. <a href="https://arxiv.org/abs/2605.30842">CoMem</a> separates memory processing from the main agent. <a href="https://arxiv.org/abs/2601.07190">Active Context Compression</a> lets agents initiate compression through a tool. These approaches address a shared question: <strong>how should limited attention be allocated?</strong></p>
+<p><a href="https://arxiv.org/abs/2608.06503">TRACE</a> goes a step further. Repeated compression can weaken recent interactions, leading to blocked actions, repeated exploration, or instability later in the run. TRACE uses paired closed-loop continuations from the same state, with verifiers measuring additional blocked actions and repeated exploration after compression.</p>
+<p>Taken together, these studies suggest a shift in emphasis:</p>
+<div class="table-wrap"><table><thead><tr><th>Direction</th><th>Main question it addresses</th><th>Question still open before execution</th></tr></thead><tbody><tr><td>Dynamic long-context evaluation</td><td>How does context growth affect task performance?</td><td>Which version of the state does this action depend on?</td></tr><tr><td>Retrieval and utilization analysis</td><td>What did the agent find, and what did it actually use?</td><td>Is the evidence it used still valid?</td></tr><tr><td>Editing, externalization, and compression</td><td>How can attention and latency costs be reduced?</td><td>Did compression preserve permissions and temporal relationships?</td></tr><tr><td>Paired closed-loop validation</td><td>Does rewriting context change subsequent behavior?</td><td>How can the finding be enforced before a real tool call?</td></tr></tbody></table></div>
+<p>These approaches and ContextAdapt are not substitutes for one another. They address problems at different points in the context lifecycle.</p>
+<h2 id="02-managing-context-is-not-the-same-as-authorizing-an-action">02 / Managing context is not the same as authorizing an action</h2>
+<p>Carefully organized context can still contain an invalid plan. A summary can accurately repeat an old instruction without saying that it was later revoked. A retriever can find the right file but bind another entity's latest value to the current task.</p>
+<p>That leads me to a narrower distinction:</p>
+<blockquote><strong>Context management determines what an agent sees. Execution authorization determines whether it may still act now.</strong></blockquote>
+<p>The two need to connect, but they should not be conflated.</p>
+<p>The early Python prototype of ContextAdapt operates at the last responsible moment: after a plan has formed, before a tool executes. Instead of asking whether the context is good overall, it asks the action for a minimal account of its provenance:</p>
+<ul><li><code>based_on_event</code>: which state or instruction does this action rely on?</li><li><code>permission_event</code>: for a protected operation, where does the current permission come from?</li><li>Do those sources refer to the same entity?</li><li>Have later events superseded them?</li><li>Does the current state still permit this operation?</li></ul>
+<p>Within the supported action contracts, insufficient evidence blocks execution. Unknown is not treated as safe.</p>
+<h2 id="03-our-first-experiment-challenged-the-easiest-story-to-tell">03 / Our first experiment challenged the easiest story to tell</h2>
+<p>“The context was too long, so the model forgot.” It is an appealing explanation and an easy story to promote. Our first experiments did not support such a simple conclusion.</p>
+<p>In a test with explicitly marked, precisely retrievable facts in very long inputs, we made 9 real calls to <code>gpt-5.6-luna</code>, at roughly 198K, 398K, and 898K input tokens. Across those three sizes, all 27 authoritative facts were extracted correctly, with no stale-source errors. These results come from the project's internal experiment records; the complete records have not been published with this article.</p>
+<p>The test was narrow. It was not a real agent workflow and did not include complex tool feedback. It nevertheless challenges an overgeneralization: <strong>length alone does not necessarily cause clearly marked facts to be lost.</strong></p>
+<p>The more useful question becomes: if the correct facts are still in the window, why does the agent act incorrectly?</p>
+<h2 id="04-the-danger-is-not-just-missing-a-fact-it-is-binding-it-incorrectly">04 / The danger is not just missing a fact—it is binding it incorrectly</h2>
+<p>We next constructed event-store traces with events presented out of order. The correct facts remained visible, alongside multiple entities, successive updates, failed reads, and old state. The agent had to determine which information belonged to the current object, which reads were trustworthy, and which values had been superseded.</p>
+<p>The results diverged:</p>
+<div class="table-wrap"><table><thead><tr><th>Input condition</th><th>Exactly correct</th><th>No protected modification requested</th><th>Wrong source</th></tr></thead><tbody><tr><td>Raw 200K</td><td>5/6</td><td>6/6</td><td>1/6</td></tr><tr><td>Raw 400K</td><td>2/6</td><td>2/6</td><td>4/6</td></tr><tr><td>Raw 900K</td><td>2/6</td><td>2/6</td><td>4/6</td></tr><tr><td>Current state extracted from the 900K trace</td><td>6/6</td><td>6/6</td><td>0/6</td></tr></tbody></table></div>
+<p>Here, K denotes the nominal size of the original trace. The normalized input was shorter. We scored action JSON only; no writes were executed. With the same state hash, four failed cases became successes, with no regressions in the other direction. These data also come from internal experiment records; the full traces and methodology records have not been published with this article.</p>
+<p>This is not simply memory loss. A closer description is that <strong>the correct facts remained in the input, but the output used a value associated with the wrong time, entity, or source.</strong></p>
+<p>Changing the order alone was not enough either. In an experiment in the same report that held content constant and varied only its order, ordering changed the error counts and error types in the tested sample. Yet across 71 valid experimental units, none of the six plausible arrangements was entirely correct; every arrangement produced at least one error. Ordering can affect risk, but it is not a safety mechanism.</p>
+<h2 id="05-from-failure-attribution-to-paired-replay-from-the-same-state">05 / From failure attribution to paired replay from the same state</h2>
+<p>If context really caused a failure, repairing it and continuing from the same environment state should produce a repeatable change in the result. Otherwise, we may be misclassifying a tool failure, an environmental difference, or random variation as a context problem.</p>
+<p>We therefore ran a controlled experiment closer to a diagnostic workflow:</p>
+<ol><li>Locate a high-friction interval in a failed trace.</li><li>Freeze the environment state and task objective.</li><li>Give the agent either the raw trace tail, structured recent state, or a summary plus recent state.</li><li>Run paired executions and use an independent outcome check to determine whether the context intervention changed behavior.</li><li>Add tool-failure controls so that unavailable tools are not mistaken for a context cause.</li></ol>
+<p>The initial experiment contained 24 opaque tasks across 8 hidden task families. On its 8-task holdout set, structured recent state achieved an 87.5% success rate, compared with 25% for the raw trace tail. In a subsequent, newly constructed holdout set, anchor precision was 4/4, with 1/4 for the remaining non-anchor controls. The injected tool-failure controls failed task validation under every tested strategy and were not attributed to context. These results come from internal experiment records; the complete records have not been published with this article.</p>
+<p>The numbers are informative, but their scope matters. They come from controlled configuration-editing tasks. They do not estimate how often context failures occur in the real world, or establish that different models would see the same gains.</p>
+<h2 id="06-the-final-step-making-validation-stop-a-tool-call">06 / The final step: making validation stop a tool call</h2>
+<p>A diagnostic report becomes an engineering safeguard only when it reaches the execution boundary.</p>
+<p>The prototype's minimal path is:</p>
+<pre><code class="language-text">Immutable event log
+    ↓
+Reconstruct current state; distinguish trusted reads from failed observations
+    ↓
+Check action provenance, entity scope, temporal order, and current permissions
+    ↓
+ALLOW or BLOCK
+    ↓
+Supported tool calls proceed only on ALLOW</code></pre>
+<p>The Python prototype demonstrates that path with:</p>
+<pre><code class="language-bash">python3 -m contextadapt demo</code></pre>
+<p>The stale action in the demonstration receives <code>BLOCK</code> for two reasons: current permissions do not allow the protected modification, and later events have superseded the state it relies on. <code>contextadapt check TRACE.jsonl</code> succeeds only when the evidence is sufficient and validation passes. A <code>BLOCK</code> result or insufficient evidence fails closed with exit code 2.</p>
+<p>The executor validation connected prepared, already accepted relation examples to the tool boundary. In the Codex setup tested at the time, <code>PreToolUse</code> checked for stale context before <code>apply_patch</code>. OMP's <code>tool_call</code> covered writes, edits, and recognizable mutating shell commands. In the paired cases, the stale path was blocked and the file remained unchanged; the current path was allowed and wrote to the file. Opaque scripts and tools outside that coverage are excluded from the conclusion. Machine-readable results are in the <a href="https://github.com/cooleryu/ContextAdapt/blob/960309fddf7115d730043501122c50f2d35955eb/artifacts/executor/real-executor-report.json">executor validation report</a>. The project's <a href="https://github.com/cooleryu/ContextAdapt/blob/960309fddf7115d730043501122c50f2d35955eb/docs/executor-integrations.md">executor integration documentation</a> provides further reading, but its description of the current implementation is not a substitute for that historical validation.</p>
+<p>That OMP executor validation used a deterministic mock provider. The report records that the remote Qwen backend was offline at the time. It demonstrates the execution-blocking path, not the decision quality of an online Qwen model.</p>
+<h2 id="07-why-a-semantic-layer-is-still-needed-and-is-not-a-safety-proof">07 / Why a semantic layer is still needed—and is not a safety proof</h2>
+<p>Some relationships cannot be established by comparing fields alone: whether two passages refer to the same entity, for example, or whether a new event truly overrides an earlier instruction. The prototype's hybrid path lets the host supply semantic analyses from two separate runs: one proposes relationships; the other reviews them.</p>
+<p>The deterministic core does not make hidden model calls or treat a missing semantic analysis as evidence of safety. It checks:</p>
+<ul><li>whether quotations match the original events verbatim;</li><li>whether temporal order and entity scope are consistent;</li><li>whether structured values have evidential support;</li><li>whether the review comes from a separate run;</li><li>whether a SHA-256 digest binds the reviewed content to the original proposal;</li><li>whether every changed field is covered;</li><li>whether any unresolved issues remain.</li></ul>
+<p>A semantic model can propose a judgment. The deterministic core performs the mechanical checks and fails closed. Separate runs and hash binding do not, by themselves, establish that the semantic judgment is correct. The project's <a href="https://github.com/cooleryu/ContextAdapt/blob/960309fddf7115d730043501122c50f2d35955eb/docs/hybrid-relations.md">hybrid semantic-relations documentation</a> describes the relevant contracts. It has evolved with the implementation and should not be read as an exact description of this early prototype.</p>
+<h2 id="08-what-contextadapt-has-not-established">08 / What ContextAdapt has not established</h2>
+<p>I do not want to present an alpha project as a universal safety layer. The evidence supports a specific set of capabilities:</p>
+<ul><li>Detecting when an action depends on superseded instructions or state.</li><li>Detecting when a protected modification lacks current permission.</li><li>Enforcing deterministic <code>ALLOW</code> / <code>BLOCK</code> rules before a tool call.</li><li>Using paired replay from the same state to test whether an intervention changes the outcome.</li></ul>
+<p>It has not established that:</p>
+<ul><li>all failures in long-horizon agents come from stale context;</li><li>the verifier can understand every semantic relationship in arbitrary natural language;</li><li>a trace fabricated by a malicious host can be detected automatically;</li><li>gains in these controlled experiments generalize directly to all models, frameworks, and production tasks;</li><li>installing ContextAdapt makes an agent “safe.”</li></ul>
+<p>In particular, the event trace remains a trusted record supplied by the host. The verifier can check internal consistency, but it cannot authenticate a fabricated history from nothing.</p>
+<h2 id="09-a-more-precise-question">09 / A more precise question</h2>
+<p>We have often asked: how much does the agent still remember?</p>
+<p>Perhaps we should also ask:</p>
+<blockquote>Before it acts, can we see what the action is based on and confirm that those grounds still hold now?</blockquote>
+<p>Long context, retrieval, summaries, external memory, and compression all matter. They help agents form better plans. But when a plan survives across time, it needs a check at execution: has the world changed, have permissions changed, or has newer evidence superseded the old?</p>
+<p><strong>The plan was valid. The world had changed.</strong></p>
+<p>ContextAdapt aims to give the system one last opportunity to say no before an old plan meets the real world.</p>
+<hr>
+<h2 id="references-and-experiment-records">References and experiment records</h2>
+<h3 id="recent-research">Recent research</h3>
+<ol><li><a href="https://arxiv.org/abs/2602.07962">LOCA-bench: Benchmarking Language Agents Under Controllable and Extreme Context Growth</a></li><li><a href="https://arxiv.org/abs/2602.05892">ContextBench: A Benchmark for Context Retrieval in Coding Agents</a></li><li><a href="https://arxiv.org/abs/2605.30842">CoMem: Context Management with A Decoupled Long-Context Model</a></li><li><a href="https://arxiv.org/abs/2607.23809">ACM: Agentic Context Management for Long Horizon Tasks</a></li><li><a href="https://arxiv.org/abs/2601.07190">Active Context Compression: Autonomous Memory Management in LLM Agents</a></li><li><a href="https://arxiv.org/abs/2608.06503">Toward Reliable Context Compression for Long-Horizon Agents: An Empirical Study of Execution Instability</a></li></ol>
+<h3 id="project-experiment-records-and-implementation-documentation">Project experiment records and implementation documentation</h3>
+<p>The three groups of results—explicit fact retrieval in very long inputs, hidden temporal and entity conflicts, and failure anchors with paired replay from the same state—come from ContextAdapt's internal experiment records. This article reports the results and limitations, but does not provide a public version of the complete records. Readers cannot currently audit these experiments independently from the article alone.</p>
+<p>The links below are pinned to the same repository commit so that later updates do not change the cited material. The executor report records historical validation. The other documents describe the implementation at that commit; they do not imply that it is identical to the early Python prototype.</p>
+<ul><li><a href="https://github.com/cooleryu/ContextAdapt/blob/960309fddf7115d730043501122c50f2d35955eb/artifacts/executor/real-executor-report.json">Executor validation report</a></li><li><a href="https://github.com/cooleryu/ContextAdapt/blob/960309fddf7115d730043501122c50f2d35955eb/docs/action-guard.md">Action guard contract</a></li><li><a href="https://github.com/cooleryu/ContextAdapt/blob/960309fddf7115d730043501122c50f2d35955eb/docs/executor-integrations.md">Executor integrations and limitations</a></li><li><a href="https://github.com/cooleryu/ContextAdapt/blob/960309fddf7115d730043501122c50f2d35955eb/docs/hybrid-relations.md">Hybrid semantic-relations protocol</a></li></ul></article>
+    </div>
+  </main>
+  <footer class="site-footer"><div class="footer-inner"><div><p><strong>Evidence before claims.</strong></p><p class="footer-note">AI agent reliability · context management · execution-time verification</p></div><p><a href="https://github.com/cooleryu/ContextAdapt">ContextAdapt</a> · <a href="../../../feed.xml">RSS</a></p></div></footer>
+</body>
+</html>
