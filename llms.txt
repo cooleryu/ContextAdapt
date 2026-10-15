@@ -23,3 +23,7 @@ Research notes on AI agent reliability, context management, and execution-time v
 - 计划没有错，世界已经变了：为什么长时程 Agent 的上下文问题最终会变成执行问题 (zh-CN): https://cooleryu.github.io/ContextAdapt/articles/the-plan-was-valid/
 - The Plan Was Valid. The World Had Changed: Why Context Problems in Long-Horizon Agents Become Execution Problems (en): https://cooleryu.github.io/ContextAdapt/articles/the-plan-was-valid/en/
 - Boundaries: the 500K commentary does not evaluate Codex 500K; the execution note describes historical, scoped prototype evidence.
+
+## Codex context troubleshooting
+- Why does Codex show 258K? Getting the 500K default to take effect (en): https://cooleryu.github.io/ContextAdapt/articles/codex-258k-context/
+- Codex 为什么显示 258K？默认 500K 怎么生效 (zh-CN): https://cooleryu.github.io/ContextAdapt/articles/codex-258k-context/zh-CN/

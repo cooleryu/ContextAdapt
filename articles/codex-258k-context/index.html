@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Why does Codex show 258K? Getting the 500K default to take effect — cooleryu</title>
+  <meta name="description" content="Separate the 258K display, the 500K default and the compaction threshold; check overrides and configure the window with documented settings.">
+  <meta name="author" content="cooleryu">
+  <meta name="theme-color" content="#f3ecd9">
+  <link rel="canonical" href="https://cooleryu.github.io/ContextAdapt/articles/codex-258k-context/">
+  <link rel="alternate" hreflang="en" href="https://cooleryu.github.io/ContextAdapt/articles/codex-258k-context/">
+<link rel="alternate" hreflang="zh-CN" href="https://cooleryu.github.io/ContextAdapt/articles/codex-258k-context/zh-CN/">
+<link rel="alternate" hreflang="x-default" href="https://cooleryu.github.io/ContextAdapt/articles/codex-258k-context/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Why does Codex show 258K? Getting the 500K default to take effect">
+  <meta property="og:description" content="Separate the 258K display, the 500K default and the compaction threshold; check overrides and configure the window with documented settings.">
+  <meta property="og:url" content="https://cooleryu.github.io/ContextAdapt/articles/codex-258k-context/">
+  <meta property="og:image" content="https://cooleryu.github.io/ContextAdapt/assets/cooleryu-open-source.png">
+  <meta property="article:published_time" content="2026-10-15T00:00:00+08:00">
+  <meta property="article:modified_time" content="2026-10-15T00:00:00+08:00">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Why does Codex show 258K? Getting the 500K default to take effect">
+  <meta name="twitter:description" content="Separate the 258K display, the 500K default and the compaction threshold; check overrides and configure the window with documented settings.">
+  <meta name="twitter:image" content="https://cooleryu.github.io/ContextAdapt/assets/cooleryu-open-source.png">
+  <link rel="stylesheet" href="../../assets/site.css">
+  <link rel="stylesheet" href="../../assets/article-additions.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Why does Codex show 258K? Getting the 500K default to take effect","description":"Separate the 258K display, the 500K default and the compaction threshold; check overrides and configure the window with documented settings.","inLanguage":"en","datePublished":"2026-10-15","dateModified":"2026-10-15","mainEntityOfPage":"https://cooleryu.github.io/ContextAdapt/articles/codex-258k-context/","author":{"@type":"Person","name":"cooleryu","url":"https://github.com/cooleryu"},"about":{"@type":"SoftwareSourceCode","name":"ContextAdapt","codeRepository":"https://github.com/cooleryu/ContextAdapt"}}</script>
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header">
+    <a class="brand" href="../../"><strong>cooleryu</strong><span>Field Notes</span></a>
+    <nav class="site-nav" aria-label="Primary"><a href="../../#writing">Writing</a><a href="../../evidence/">Evidence</a><a href="https://github.com/cooleryu/ContextAdapt">GitHub ↗</a></nav>
+  </header>
+  <main id="content">
+    <section class="article-hero"><div class="article-hero-inner article-addition-hero"><div>
+      <p class="eyebrow">ContextAdapt · Troubleshooting</p>
+      <h1>Why does Codex show 258K? Getting the 500K default to take effect</h1>
+      <div class="article-meta"><span>Published <time datetime="2026-10-15">2026-10-15</time></span><span>By cooleryu</span><span>English edition</span></div>
+      <nav class="language-links" aria-label="Article language"><a href="./" lang="en" aria-current="page">English</a> · <a href="zh-CN/" lang="zh-CN">中文</a></nav>
+    </div></div></section>
+    <div class="article-layout">
+      <aside class="toc" aria-label="Table of contents"><strong>On this page</strong><ol><li><a href="#check-these-three-things-first">Check these three things first</a></li><li><a href="#set-a-500k-window-manually">Set a 500K window manually</a></li><li><a href="#faq">FAQ</a></li><li><a href="#once-the-window-is-set">Once the window is set</a></li></ol></aside>
+      <article class="prose"><p><strong>258K can be the usable-window calculation 272,000 × 95% = 258,400, rather than the model's maximum capacity. Tibo announced a 500K default for GPT-6.1 Sol in Codex and Work; the same calculation would display 475K. Check the selected model, configuration overrides and current session before setting a window manually.</strong> <a href="https://github.com/openai/codex/blob/092d3acd6bec3e3a14bdc7e7a2810ab628ab759d/codex-rs/protocol/src/openai_models.rs#L515-L538">Calculation</a> · <a href="https://x.com/thsottiaux/status/2109430343346581527">Tibo's announcement</a></p>
+<h2 id="check-these-three-things-first">Check these three things first</h2>
+<p><strong>The selected model.</strong> The announcement concerns GPT-6.1 Sol. Check the model picker and, where supported, use <code>/status</code> to inspect the session. Record total capacity and usage separately: remaining context is not the total window. <a href="https://learn.chatgpt.com/docs/reference/slash-commands">Status command</a></p>
+<p><strong>Existing overrides.</strong> Inspect <code>~/.codex/config.toml</code> and trusted projects' <code>.codex/config.toml</code>, particularly <code>model_context_window</code> and <code>model_auto_compact_token_limit</code>. CLI flags, project configuration and a selected profile can take precedence over personal settings. In the CLI, <code>/debug-config</code> shows configuration layers and their sources. To follow the default, note and remove an old window override from the layer that sets it. <a href="https://learn.chatgpt.com/docs/config-file/config-basic">Precedence</a> · <a href="https://learn.chatgpt.com/docs/developer-settings">Diagnostics</a></p>
+<p><strong>Different sessions or model catalogs.</strong> Record the client version and compare a fresh chat with the existing one using the same model. <a href="https://linux.do/t/topic/3013574">LINUX DO users</a> report different capacities in new and old chats; a <a href="https://github.com/openai/codex/issues/53336">GitHub issue</a> also records one chat dropping from 475K to 258.4K. Catalog or cache inconsistency is worth investigating, but these reports establish neither a universal cause nor a minimum version guaranteed to fix it.</p>
+<h2 id="set-a-500k-window-manually">Set a 500K window manually</h2>
+<p>Put these entries at the <strong>top level</strong> of the configuration file that actually applies, before any <code>[table]</code> headers. Edit existing entries rather than adding duplicates. This example selects GPT-6.1 Sol; preserve your other settings.</p>
+<pre><code class="language-toml">model = &quot;gpt-6.1-sol&quot;
+model_context_window = 500000</code></pre>
+<p><code>model_auto_compact_token_limit</code> controls when automatic compaction triggers; it does not enable a larger window. If you previously set it, note its value first. To return to the model's default threshold, remove that override and check higher-priority configuration layers. <a href="https://learn.chatgpt.com/docs/config-file/config-reference">Official configuration reference</a></p>
+<p>After saving, restart the client and inspect a fresh chat. This is a diagnostic step, not a guaranteed catalog fix. The window override is also capped by the model catalog's <code>max_context_window</code>; editing a local number cannot expand the server's capacity. <a href="https://github.com/openai/codex/blob/092d3acd6bec3e3a14bdc7e7a2810ab628ab759d/codex-rs/models-manager/src/model_info.rs#L19-L31">Override implementation</a></p>
+<h2 id="faq">FAQ</h2>
+<h3 id="i-set-500k-but-see-475k-did-it-fail">I set 500K but see 475K. Did it fail?</h3>
+<p>Not necessarily: 475K is exactly the result under the 95% calculation above. Existing context uses some of that capacity, so it is not a promise that you can paste another 475K tokens.</p>
+<h3 id="is-the-missing-5-all-reserved-for-compaction">Is the missing 5% all reserved for compaction?</h3>
+<p>No: the <a href="https://github.com/openai/codex/blob/092d3acd6bec3e3a14bdc7e7a2810ab628ab759d/codex-rs/protocol/src/openai_models.rs#L466-L469">source comment</a> describes headroom for system prompts, tool overhead and model output. When neither model metadata nor configuration supplies a threshold, the cited version derives it at 90% of the window—450K for 500K; a lower catalog or configured limit can trigger compaction sooner, and this version-specific rule is not a permanent guarantee for every client. <a href="https://github.com/openai/codex/blob/092d3acd6bec3e3a14bdc7e7a2810ab628ab759d/codex-rs/protocol/src/openai_models.rs#L515-L538">Threshold implementation</a></p>
+<h3 id="why-does-the-api-list-1-050-000-while-codex-defaults-to-500k">Why does the API list 1,050,000 while Codex defaults to 500K?</h3>
+<p>The <a href="https://developers.openai.com/api/docs/models/gpt-6.1-sol">API model specification</a>, product default and catalog's maximum override describe different limits. Do not treat the API specification as the usable input budget of your current Codex session.</p>
+<h3 id="what-if-it-still-shows-258k-after-the-change">What if it still shows 258K after the change?</h3>
+<p>Record the version, model, configuration sources and capacities in new and existing chats for the relevant issue report; how the backend assigns defaults to a particular account remains uncertain. This article does not test 500K inference capacity, and the configuration example is not a test result.</p>
+<h2 id="once-the-window-is-set">Once the window is set</h2>
+<p>A larger window can retain more history; before writing, still check the current target, file state and permission. Read the <a href="../codex-500k-context/">500K quick take</a> and <a href="../the-plan-was-valid/en/"><em>The plan was valid. The world had changed</em></a>.</p></article>
+    </div>
+  </main>
+  <footer class="site-footer"><div class="footer-inner"><div><p><strong>Evidence before claims.</strong></p><p class="footer-note">AI agent reliability · context management · execution-time verification</p></div><p><a href="https://github.com/cooleryu/ContextAdapt">ContextAdapt</a> · <a href="../../feed.xml">RSS</a></p></div></footer>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Codex 为什么显示 258K？默认 500K 怎么生效 — cooleryu</title>
+  <meta name="description" content="分清 258K 显示值、500K 默认窗口和自动压缩阈值，检查模型与配置覆盖，并用官方配置项手动设置。">
+  <meta name="author" content="cooleryu">
+  <meta name="theme-color" content="#f3ecd9">
+  <link rel="canonical" href="https://cooleryu.github.io/ContextAdapt/articles/codex-258k-context/zh-CN/">
+  <link rel="alternate" hreflang="en" href="https://cooleryu.github.io/ContextAdapt/articles/codex-258k-context/">
+<link rel="alternate" hreflang="zh-CN" href="https://cooleryu.github.io/ContextAdapt/articles/codex-258k-context/zh-CN/">
+<link rel="alternate" hreflang="x-default" href="https://cooleryu.github.io/ContextAdapt/articles/codex-258k-context/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Codex 为什么显示 258K？默认 500K 怎么生效">
+  <meta property="og:description" content="分清 258K 显示值、500K 默认窗口和自动压缩阈值，检查模型与配置覆盖，并用官方配置项手动设置。">
+  <meta property="og:url" content="https://cooleryu.github.io/ContextAdapt/articles/codex-258k-context/zh-CN/">
+  <meta property="og:image" content="https://cooleryu.github.io/ContextAdapt/assets/cooleryu-open-source.png">
+  <meta property="article:published_time" content="2026-10-15T00:00:00+08:00">
+  <meta property="article:modified_time" content="2026-10-15T00:00:00+08:00">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Codex 为什么显示 258K？默认 500K 怎么生效">
+  <meta name="twitter:description" content="分清 258K 显示值、500K 默认窗口和自动压缩阈值，检查模型与配置覆盖，并用官方配置项手动设置。">
+  <meta name="twitter:image" content="https://cooleryu.github.io/ContextAdapt/assets/cooleryu-open-source.png">
+  <link rel="stylesheet" href="../../../assets/site.css">
+  <link rel="stylesheet" href="../../../assets/article-additions.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Codex 为什么显示 258K？默认 500K 怎么生效","description":"分清 258K 显示值、500K 默认窗口和自动压缩阈值，检查模型与配置覆盖，并用官方配置项手动设置。","inLanguage":"zh-CN","datePublished":"2026-10-15","dateModified":"2026-10-15","mainEntityOfPage":"https://cooleryu.github.io/ContextAdapt/articles/codex-258k-context/zh-CN/","author":{"@type":"Person","name":"cooleryu","url":"https://github.com/cooleryu"},"about":{"@type":"SoftwareSourceCode","name":"ContextAdapt","codeRepository":"https://github.com/cooleryu/ContextAdapt"}}</script>
+</head>
+<body>
+  <a class="skip-link" href="#content">跳到正文</a>
+  <header class="site-header">
+    <a class="brand" href="../../../"><strong>cooleryu</strong><span>Field Notes</span></a>
+    <nav class="site-nav" aria-label="Primary"><a href="../../../#writing">Writing</a><a href="../../../evidence/">Evidence</a><a href="https://github.com/cooleryu/ContextAdapt">GitHub ↗</a></nav>
+  </header>
+  <main id="content">
+    <section class="article-hero"><div class="article-hero-inner article-addition-hero"><div>
+      <p class="eyebrow">ContextAdapt · Troubleshooting</p>
+      <h1>Codex 为什么显示 258K？默认 500K 怎么生效</h1>
+      <div class="article-meta"><span>发布 <time datetime="2026-10-15">2026-10-15</time></span><span>By cooleryu</span><span>中文版</span></div>
+      <nav class="language-links" aria-label="文章语言"><a href="../" lang="en">English</a> · <a href="./" lang="zh-CN" aria-current="page">中文</a></nav>
+    </div></div></section>
+    <div class="article-layout">
+      <aside class="toc" aria-label="目录"><strong>本文目录</strong><ol><li><a href="#section-2">先查这三处</a></li><li><a href="#500k">怎样手动设为 500K</a></li><li><a href="#faq">FAQ</a></li><li><a href="#section-41">窗口调好以后</a></li></ol></aside>
+      <article class="prose"><p><strong>258K 可以来自 272,000 × 95% = 258,400 的有效窗口折算，不代表模型最大只能处理 258K。Tibo 宣布的 500K 是 GPT-6.1 Sol 在 Codex 和 Work 中的默认窗口；按同一口径折算会显示 475K。先检查当前模型、配置覆盖和会话状态，再决定是否手动设置。</strong> <a href="https://github.com/openai/codex/blob/092d3acd6bec3e3a14bdc7e7a2810ab628ab759d/codex-rs/protocol/src/openai_models.rs#L515-L538">计算依据</a> · <a href="https://x.com/thsottiaux/status/2109430343346581527">Tibo 原帖</a></p>
+<h2 id="section-2">先查这三处</h2>
+<p><strong>模型是否一致。</strong> 公告针对 GPT-6.1 Sol。先看模型选择器；支持的客户端可用 <code>/status</code> 查看当前会话，记录容量的总数和已用量，不要把剩余额度当总窗口。<a href="https://learn.chatgpt.com/docs/reference/slash-commands">状态命令</a></p>
+<p><strong>旧配置是否覆盖默认值。</strong> 检查 <code>~/.codex/config.toml</code> 和可信项目的 <code>.codex/config.toml</code>，重点找 <code>model_context_window</code>、<code>model_auto_compact_token_limit</code>。CLI 参数、项目配置和选中的 profile 都可能优先于个人配置；CLI 可用 <code>/debug-config</code> 查看配置层来源。若要跟随默认值，先记下旧窗口覆盖，再从设置它的配置层移除。<a href="https://learn.chatgpt.com/docs/config-file/config-basic">配置优先级</a> · <a href="https://learn.chatgpt.com/docs/developer-settings">诊断命令</a></p>
+<p><strong>会话或模型目录是否不同。</strong> 记下客户端版本，用同一模型比较新旧会话。<a href="https://linux.do/t/topic/3013574">LINUX DO</a> 有新旧会话不同的报告；<a href="https://github.com/openai/codex/issues/53336">GitHub issue</a> 还记录了同一会话从 475K 回到 258.4K。目录或缓存不一致是排查方向，但这些报告不能证明所有账号都是同一原因，也没有给出保证修好的最低版本。</p>
+<h2 id="500k">怎样手动设为 500K</h2>
+<p>在实际生效的 <code>config.toml</code> <strong>顶层</strong>设置下列两项，放在 <code>[表名]</code> 之前；已有同名项就修改，不要重复追加。此例选择 GPT-6.1 Sol，其他设置保留。</p>
+<pre><code class="language-toml">model = &quot;gpt-6.1-sol&quot;
+model_context_window = 500000</code></pre>
+<p><code>model_auto_compact_token_limit</code> 控制何时自动压缩，不是开启大窗口的开关。若以前手写过它，先记下原值；要恢复模型默认阈值，应移除这一覆盖，并检查更高优先级配置。<a href="https://learn.chatgpt.com/docs/config-file/config-reference">官方配置说明</a></p>
+<p>保存后重新启动客户端，用新会话核对容量；这只是排查步骤，不保证修复目录问题。窗口覆盖还会受模型目录的 <code>max_context_window</code> 限制，改本地数字不能扩大服务端能力。<a href="https://github.com/openai/codex/blob/092d3acd6bec3e3a14bdc7e7a2810ab628ab759d/codex-rs/models-manager/src/model_info.rs#L19-L31">覆盖实现</a></p>
+<h2 id="faq">FAQ</h2>
+<h3 id="500k-475k">设了 500K，却显示 475K，是失败了吗？</h3>
+<p>不一定；按上述 95% 口径正好是 475K。它是有效容量，已有上下文还会占用它，不等于还能粘贴这么多 token。</p>
+<h3 id="5-compaction">少掉的 5% 都是给 compaction 吗？</h3>
+<p>不是；<a href="https://github.com/openai/codex/blob/092d3acd6bec3e3a14bdc7e7a2810ab628ab759d/codex-rs/protocol/src/openai_models.rs#L466-L469">代码注释</a> 说明它为系统提示、工具开销和模型输出留空间。所引版本在模型目录和配置都未指定阈值时，按窗口的 90% 计算：500K 对应 450K；目录或配置中的更低阈值会提前触发，这是该版本的规则，不是所有客户端的永久保证。<a href="https://github.com/openai/codex/blob/092d3acd6bec3e3a14bdc7e7a2810ab628ab759d/codex-rs/protocol/src/openai_models.rs#L515-L538">阈值实现</a></p>
+<h3 id="api-1-050-000-codex-500k">API 写着 1,050,000，为什么 Codex 默认只有 500K？</h3>
+<p><a href="https://developers.openai.com/api/docs/models/gpt-6.1-sol">API 模型规格</a>、产品默认窗口和客户端目录允许的覆盖上限是不同口径。不要把 API 的标称上限直接当作当前 Codex 会话的可用输入预算。</p>
+<h3 id="258k">改完仍是 258K，该怎么办？</h3>
+<p>记录版本、模型、配置来源和新旧会话的容量，附到对应问题报告；后台对特定账号如何下发默认值，目前仍不确定。本文没有测试实际 500K 推理容量，也不把配置示例当作测试结果。</p>
+<h2 id="section-41">窗口调好以后</h2>
+<p>更大的窗口能留住更多历史，写入前仍要确认目标、文件状态和权限是否有效。继续读 <a href="../../codex-500k-context/zh-CN/">500K 快评</a> 与 <a href="../../the-plan-was-valid/">《计划没有错，世界已经变了》</a>。</p></article>
+    </div>
+  </main>
+  <footer class="site-footer"><div class="footer-inner"><div><p><strong>Evidence before claims.</strong></p><p class="footer-note">AI agent reliability · context management · execution-time verification</p></div><p><a href="https://github.com/cooleryu/ContextAdapt">ContextAdapt</a> · <a href="../../../feed.xml">RSS</a></p></div></footer>
+</body>
+</html>
