@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { withTracker } from "./tracker.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const siteUrl = "https://cooleryu.github.io/ContextAdapt";
@@ -303,7 +304,8 @@ const ledgerPage = shell({
 function write(relative, content) {
   const target = path.join(root, relative);
   fs.mkdirSync(path.dirname(target), { recursive: true });
-  fs.writeFileSync(target, content.endsWith("\n") ? content : `${content}\n`);
+  const output = relative.endsWith(".html") ? withTracker(content) : content;
+  fs.writeFileSync(target, output.endsWith("\n") ? output : `${output}\n`);
 }
 
 // Keep Search Console ownership verification on the homepage after rebuilds.
